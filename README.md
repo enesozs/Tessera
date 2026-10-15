@@ -96,6 +96,19 @@ backend/src/tessera/       providers/ (yahoo, rates, macro, fx, sec, ecb) · cac
 Every endpoint returns `{data, meta}` where `meta` is the provenance record (source, URL,
 freshness, as-of, retrieved-at, stale flag, methodology notes).
 
+## Deployment
+
+```bash
+make docker       # one image: built UI + API (needs Docker running; context is ../)
+make docker-run   # http://localhost:8010, provider cache kept in the `tessera-data` volume
+```
+
+The API compresses responses, sets basic security headers and rate-limits each client
+(`TESSERA_RATE_LIMIT` requests per minute, default 300; 0 disables) so a public instance cannot
+exhaust the free providers' quotas. Other settings: `SEC_USER_AGENT`, `TESSERA_CACHE_DIR`,
+`TESSERA_STATIC_DIR`. CI (`.github/workflows/ci.yml`) lints, type-checks, tests and builds both
+halves on every push once the repository is on GitHub.
+
 ## Development
 
 ```bash

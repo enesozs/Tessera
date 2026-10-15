@@ -1,6 +1,9 @@
 import math
 
 import pytest
+
+pytest.importorskip("derivlab", reason="option analytics need derivlab from project 05")
+
 from derivlab import Market
 from derivlab.data.cleaning import clean_chain
 from derivlab.data.synthetic import SyntheticSpec, synthetic_chain

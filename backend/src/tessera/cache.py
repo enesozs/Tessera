@@ -31,7 +31,9 @@ from tessera.errors import NotFoundError, TesseraError, UpstreamError
 
 log = logging.getLogger(__name__)
 
-DEFAULT_DIR = Path(__file__).resolve().parents[2] / ".cache"
+DEFAULT_DIR = Path(
+    os.environ.get("TESSERA_CACHE_DIR") or Path(__file__).resolve().parents[2] / ".cache"
+)
 
 
 class Cache:

@@ -8,7 +8,7 @@ WEB_PORT ?= 5180
 -include .env
 export
 
-.PHONY: install dev api web test e2e lint check build serve
+.PHONY: install dev api web test e2e lint check build serve docker docker-run
 
 install:            ## Create the Python venv and install both halves
 	python3 -m venv backend/.venv
@@ -49,3 +49,9 @@ build:              ## Production build of the frontend (served by FastAPI from 
 
 serve: build        ## Single process: API + built UI on http://localhost:8010
 	cd backend && .venv/bin/fastapi run --port $(API_PORT)
+
+docker:             ## Build the single-container image (context: the QuantProjects folder)
+	docker build -f Dockerfile -t tessera:latest ..
+
+docker-run:         ## Run the image on http://localhost:8010 (cache in a named volume)
+	docker run --rm -p 8010:8010 -v tessera-data:/data $(if $(SEC_USER_AGENT),-e SEC_USER_AGENT="$(SEC_USER_AGENT)") tessera:latest

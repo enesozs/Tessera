@@ -30,11 +30,19 @@ from derivlab.calibration.svi import fit_svi
 from derivlab.data.chain import ExpirySlice, OptionChain, OptionQuote
 from derivlab.data.cleaning import clean_chain
 from derivlab.data.yahoo import fetch_chain
-from pydantic import BaseModel
 
 from tessera.cache import cached
 from tessera.errors import NotFoundError, UpstreamError
 from tessera.models import Envelope, Provenance
+from tessera.option_models import (
+    ChainRow,
+    ChainTotals,
+    OptionChainView,
+    OptionLeg,
+    SmilePoint,
+    SmileSlice,
+    VolSurfaceView,
+)
 from tessera.providers import rates, yahoo
 from tessera.providers.yahoo import _num
 
@@ -46,57 +54,6 @@ EUROPEAN_NOTE = (
 
 
 # ── Chain (OMON) ──────────────────────────────────────────────────────────────
-
-
-class OptionLeg(BaseModel):
-    contract: str
-    bid: float | None
-    ask: float | None
-    last: float | None
-    volume: float | None
-    open_interest: float | None
-    last_trade: datetime | None
-    in_the_money: bool
-    price: float | None
-    price_source: Literal["mid", "last"] | None
-    iv: float | None
-    yahoo_iv: float | None
-    delta: float | None
-    gamma: float | None
-    theta_per_day: float | None
-    vega_per_point: float | None
-
-
-class ChainRow(BaseModel):
-    strike: float
-    call: OptionLeg | None
-    put: OptionLeg | None
-
-
-class ChainTotals(BaseModel):
-    call_volume: float
-    put_volume: float
-    call_open_interest: float
-    put_open_interest: float
-    put_call_volume: float | None
-    put_call_open_interest: float | None
-
-
-class OptionChainView(BaseModel):
-    symbol: str
-    currency: str | None
-    spot: float
-    expiries: list[str]
-    expiry: str
-    days: int
-    t: float
-    rate: float
-    dividend_yield: float  # implied by the parity forward: q = r − ln(F/S)/t
-    forward: float
-    forward_method: str
-    atm_strike: float | None
-    rows: list[ChainRow]
-    totals: ChainTotals
 
 
 def leg_price(bid: float | None, ask: float | None, last: float | None) -> tuple[float, str] | None:
@@ -281,39 +238,6 @@ def option_chain(symbol: str, expiry: str | None = None) -> Envelope[OptionChain
 
 
 # ── Smile & term structure (IVOL) ─────────────────────────────────────────────
-
-
-class SmilePoint(BaseModel):
-    strike: float
-    log_moneyness: float
-    iv: float
-    kind: str
-    source: str
-
-
-class SmileSlice(BaseModel):
-    expiry: str
-    days: int
-    t: float
-    forward: float
-    atm_vol: float
-    points: list[SmilePoint]
-    fit_strikes: list[float]
-    fit_iv: list[float]
-    rmse: float | None
-    butterfly_arbitrage: bool
-    skew_90_110: float | None  # IV at 90% of the forward minus IV at 110%, vol points
-    dropped: dict[str, int]
-
-
-class VolSurfaceView(BaseModel):
-    symbol: str
-    spot: float
-    price_basis: str
-    rate: float
-    slices: list[SmileSlice]
-    realized_vol_30d: float | None
-    realized_vol_90d: float | None
 
 
 def realized_vol(closes: list[float], window: int) -> float | None:

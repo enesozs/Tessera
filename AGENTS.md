@@ -63,6 +63,14 @@ IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO HELP`.
   any pane's tables (`lib/csv.ts`), pop-out panes (`?popout=`; such windows use sessionStorage
   so they never overwrite the main layout) and share links (`?ws=`, sanitised on import;
   `lib/share.ts`).
+- Phase 6 added: derivlab is optional (`tessera/option_models.py` holds the schemas; the API
+  imports `tessera.options` lazily and answers 503 with instructions when derivlab is missing;
+  its tests skip), GZip, security headers, per-client token-bucket rate limit
+  (`TESSERA_RATE_LIMIT`), configurable `TESSERA_STATIC_DIR` / `TESSERA_CACHE_DIR`, a Dockerfile
+  (context: the QuantProjects folder, so derivlab is included; `Dockerfile.dockerignore`
+  whitelists the three source trees) and GitHub Actions CI. The image itself has not been built
+  on this machine yet (Docker Desktop was not running); a clean non-editable install with the
+  same command was verified instead.
 - Shell: workspace tabs (7 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
   Valuation · RACE, Options · SPY, Portfolio — the last three added by persisted-state
   migrations, versions 2–4), 1–6 tiled
@@ -71,7 +79,7 @@ IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO HELP`.
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 97 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
+- Tests: 100 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
   cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn, the query parser), 14
   frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
@@ -143,7 +151,8 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
    several named portfolios, factor exposures, Brinson attribution.
 5. ~~**Query & alerts:** `EQS` query language, `ALRT`, CSV export, pop-outs, share links~~ — done.
    Next: saved screens, alerts on macro releases and portfolio drift.
-6. **Platform:** Postgres for point-in-time storage, Docker, deploy (static UI + hosted API).
+6. ~~**Platform:** Docker, CI, hardening~~ — done. Next: push to GitHub, deploy (one container
+   on a small VM/Render/Fly, or static UI + API), Postgres/DuckDB for point-in-time history.
 7. **AI:** `ASK` — Claude with typed tools over the terminal's own endpoints, cited answers.
 
 Known limitations: Yahoo is unofficial and may change or rate-limit; statements are not

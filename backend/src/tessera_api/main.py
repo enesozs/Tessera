@@ -7,15 +7,28 @@ plain `def`; FastAPI runs them in its threadpool.
 from __future__ import annotations
 
 import logging
+import os
+import threading
+import time
 from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import FastAPI, Query, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from tessera import curves, dcf, fixed_income, markets, options, portfolio, screener, valuation
+from tessera import (
+    curves,
+    dcf,
+    fixed_income,
+    markets,
+    option_models,
+    portfolio,
+    screener,
+    valuation,
+)
 from tessera.errors import (
     ConfigurationError,
     NotApplicableError,
@@ -33,6 +46,57 @@ app = FastAPI(
     version="0.1.0",
     description="Free public market data, normalised and annotated with provenance.",
 )
+
+# Ten years of daily bars is ~250 kB of JSON; compression cuts that by ~80%.
+app.add_middleware(GZipMiddleware, minimum_size=2048)
+
+
+class RateLimiter:
+    """Token bucket per client address: `per_minute` requests, refilled continuously.
+
+    Every API call can fan out to several free upstream providers, so a public deployment must
+    not let one client exhaust their quotas. 0 disables the limit.
+    """
+
+    def __init__(self, per_minute: int) -> None:
+        self.per_minute = per_minute
+        self._buckets: dict[str, tuple[float, float]] = {}
+        self._lock = threading.Lock()
+
+    def allow(self, key: str) -> bool:
+        if self.per_minute <= 0:
+            return True
+        now = time.monotonic()
+        with self._lock:
+            tokens, last = self._buckets.get(key, (float(self.per_minute), now))
+            tokens = min(self.per_minute, tokens + (now - last) * self.per_minute / 60)
+            allowed = tokens >= 1
+            self._buckets[key] = (tokens - 1 if allowed else tokens, now)
+            return allowed
+
+
+app.state.limiter = RateLimiter(int(os.environ.get("TESSERA_RATE_LIMIT", "300")))
+
+
+@app.middleware("http")
+async def guard(request: Request, call_next):
+    if request.url.path.startswith("/api/") and request.url.path != "/api/health":
+        client = request.client.host if request.client else "unknown"
+        if not request.app.state.limiter.allow(client):
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "detail": "Too many requests — slow down a little.",
+                    "kind": "RateLimited",
+                },
+                headers={"Retry-After": "10"},
+            )
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    return response
+
 
 Symbol = Annotated[str, Query(min_length=1, max_length=24, pattern=r"^[\w.\-=^]+$")]
 Currency = Annotated[str, Query(pattern=r"^[A-Z]{3}$")]
@@ -139,16 +203,28 @@ def comps(
 # ── Options ───────────────────────────────────────────────────────────────────
 
 
+def _options():
+    """Option analytics need derivlab (project 05); without it, say so instead of crashing."""
+    try:
+        from tessera import options
+    except ImportError as exc:
+        raise ConfigurationError(
+            "Option analytics (OMON, IVOL) use derivlab from QuantProjects/05. "
+            "Run `make install` with the sibling project present, then restart the API."
+        ) from exc
+    return options
+
+
 @app.get("/api/options/chain")
 def option_chain(
     symbol: Symbol, expiry: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")] = None
-) -> Envelope[options.OptionChainView]:
-    return options.option_chain(symbol.upper(), expiry)
+) -> Envelope[option_models.OptionChainView]:
+    return _options().option_chain(symbol.upper(), expiry)
 
 
 @app.get("/api/options/surface")
-def option_surface(symbol: Symbol) -> Envelope[options.VolSurfaceView]:
-    return options.vol_surface(symbol.upper())
+def option_surface(symbol: Symbol) -> Envelope[option_models.VolSurfaceView]:
+    return _options().vol_surface(symbol.upper())
 
 
 @app.post("/api/portfolio/analyze")
@@ -242,7 +318,10 @@ def macro_series(
 
 # ── Built frontend (single-process mode: `make serve`) ────────────────────────
 
-DIST = Path(__file__).resolve().parents[3] / "frontend" / "dist"
+DIST = Path(
+    os.environ.get("TESSERA_STATIC_DIR")
+    or Path(__file__).resolve().parents[3] / "frontend" / "dist"
+)
 if DIST.is_dir():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
