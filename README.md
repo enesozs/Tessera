@@ -43,6 +43,7 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 | `MOST` | Top U.S. gainers, losers and most active | `MOST LOSERS` |
 | `OMON` | Option chain by strike: quotes, volume, OI, implied vol and Greeks | `SPY OMON` |
 | `IVOL` | Volatility smile with SVI fit, ATM term structure vs realised vol, skew | `NVDA IVOL` |
+| `PORT` | Portfolio in any currency mix: exposures, risk contributions, VaR/ES, stress replays, optimised alternatives | `PORT RISK` |
 | `WEI` | World equity indices by region | `WEI` |
 | `CMDTY` | Energy, metals and agriculture futures | `CMDTY` |
 | `WL` | Your watchlist (stored in the browser) | `WL ADD ASML` |

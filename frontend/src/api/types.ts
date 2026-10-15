@@ -563,3 +563,75 @@ export interface BondAnalysis {
     z_spread_bp: number | null
   }
 }
+
+// ── Portfolio ─────────────────────────────────────────────────────────────────
+
+export interface PortfolioRequest {
+  holdings: { symbol: string; shares: number }[]
+  base: string
+  benchmark: string
+  lookback_years: 1 | 2 | 3 | 5
+  confidence: number
+}
+
+export interface PortfolioPosition {
+  symbol: string
+  name: string
+  sector: string | null
+  country: string | null
+  currency: string
+  shares: number
+  price: number
+  value: number
+  weight: number
+  period_return: number
+  volatility: number
+  beta: number
+  risk_share: number
+}
+
+export interface PortfolioAnalysis {
+  base: string
+  benchmark: string
+  value: number
+  start: string
+  end: string
+  days: number
+  rf: number
+  positions: PortfolioPosition[]
+  excluded: Record<string, string>
+  stats: Record<string, number | null>
+  var: {
+    method: string
+    var_pct: number
+    es_pct: number
+    var_amount: number
+    es_amount: number
+    var_10d_amount: number
+  }[]
+  confidence: number
+  exposures: Record<'sector' | 'country' | 'currency', { name: string; weight: number }[]>
+  correlation: { symbols: string[]; matrix: number[][] }
+  shrinkage: number
+  diversification: { effective_n: number; diversification_ratio: number }
+  stress: {
+    name: string
+    start: string
+    end: string
+    portfolio_return: number
+    pnl: number
+    benchmark_return: number | null
+    proxied: string[]
+  }[]
+  shocks: { name: string; return: number; pnl: number }[]
+  performance: { dates: string[]; portfolio: number[]; benchmark: number[] }
+  optimised: {
+    name: string
+    weights: Record<string, number>
+    volatility: number
+    expected_return: number
+    sharpe: number
+    effective_n: number
+    max_drawdown: number
+  }[]
+}

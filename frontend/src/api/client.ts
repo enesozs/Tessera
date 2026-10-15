@@ -19,6 +19,8 @@ import type {
   MacroSummary,
   Monitor,
   OptionChainView,
+  PortfolioAnalysis,
+  PortfolioRequest,
   VolSurfaceView,
   Mover,
   MoverKind,
@@ -306,6 +308,15 @@ export const useBond = (request: BondRequest | null) =>
     queryFn: () => post<Envelope<BondAnalysis>>('/bonds/analyze', request),
     enabled: !!request,
     staleTime: 30 * MIN,
+    placeholderData: keepPreviousData,
+  })
+
+export const usePortfolio = (request: PortfolioRequest | null) =>
+  useQuery({
+    queryKey: ['portfolio', request],
+    queryFn: () => post<Envelope<PortfolioAnalysis>>('/portfolio/analyze', request),
+    enabled: !!request && request.holdings.length > 0,
+    staleTime: 5 * MIN,
     placeholderData: keepPreviousData,
   })
 

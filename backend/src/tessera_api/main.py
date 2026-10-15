@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from tessera import curves, dcf, fixed_income, markets, options, valuation
+from tessera import curves, dcf, fixed_income, markets, options, portfolio, valuation
 from tessera.errors import (
     ConfigurationError,
     NotApplicableError,
@@ -149,6 +149,11 @@ def option_chain(
 @app.get("/api/options/surface")
 def option_surface(symbol: Symbol) -> Envelope[options.VolSurfaceView]:
     return options.vol_surface(symbol.upper())
+
+
+@app.post("/api/portfolio/analyze")
+def analyze_portfolio(request: portfolio.PortfolioRequest) -> Envelope[portfolio.PortfolioAnalysis]:
+    return portfolio.analyse(request)
 
 
 # ── Markets ───────────────────────────────────────────────────────────────────

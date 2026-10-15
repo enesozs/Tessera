@@ -107,6 +107,20 @@ export function parseArgs(fn: FunctionCode, args: string[]): ArgResult {
       }
       return { params }
     }
+    case 'PORT': {
+      const views: Record<string, string> = {
+        OVERVIEW: 'overview',
+        RISK: 'risk',
+        STRESS: 'stress',
+        OPT: 'optimise',
+        OPTIMISE: 'optimise',
+        OPTIMIZE: 'optimise',
+      }
+      if (args.length > 1) return unknown(args[1])
+      if (args.length && !(args[0] in views)) return unknown(args[0])
+      if (args.length) params.view = views[args[0]]
+      return { params }
+    }
     case 'OMON':
       if (args.length > 1) return unknown(args[1])
       if (args.length && !/^\d{4}-\d{2}-\d{2}$/.test(args[0])) return unknown(args[0])

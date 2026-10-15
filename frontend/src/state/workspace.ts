@@ -30,6 +30,31 @@ export interface WatchItem {
   name?: string
 }
 
+export interface PortfolioState {
+  name: string
+  base: string
+  benchmark: string
+  holdings: { symbol: string; shares: number }[]
+}
+
+export const SAMPLE_PORTFOLIO: PortfolioState = {
+  name: 'Sample · global',
+  base: 'EUR',
+  benchmark: '^GSPC',
+  holdings: [
+    { symbol: 'AAPL', shares: 50 },
+    { symbol: 'MSFT', shares: 30 },
+    { symbol: 'NVDA', shares: 40 },
+    { symbol: 'ASML', shares: 10 },
+    { symbol: 'RACE.MI', shares: 20 },
+    { symbol: 'SAP.DE', shares: 30 },
+    { symbol: 'ISP.MI', shares: 2000 },
+    { symbol: 'THYAO.IS', shares: 300 },
+    { symbol: 'TLT', shares: 100 },
+    { symbol: 'GLD', shares: 40 },
+  ],
+}
+
 export const MAX_PANES = 6
 
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -79,7 +104,17 @@ export function defaultWorkspaces(): Workspace[] {
     ]),
     valuationWorkspace(),
     optionsWorkspace(),
+    portfolioWorkspace(),
   ]
+}
+
+/** Added in layout version 4: portfolio risk. */
+function portfolioWorkspace(): Workspace {
+  return workspace('Portfolio', [
+    pane('PORT', { link: 'cyan', security: 'ASML' }),
+    pane('GP', { link: 'cyan', security: 'ASML', params: { range: '1Y' } }),
+    pane('DES', { link: 'cyan', security: 'ASML' }),
+  ])
 }
 
 /** Added in layout version 3: listed options. */
@@ -122,6 +157,7 @@ interface State {
   activeWorkspaceId: string
   watchlist: WatchItem[]
   history: string[]
+  portfolio: PortfolioState
 
   selectWorkspace: (id: string) => void
   cycleWorkspace: (offset: number) => void
@@ -142,11 +178,12 @@ interface State {
   /** Run a parsed command. Returns an error message, or null on success. */
   run: (command: Command, options?: { newPane?: boolean; raw?: string }) => string | null
 
+  setPortfolio: (patch: Partial<PortfolioState>) => void
   addToWatchlist: (item: WatchItem) => void
   removeFromWatchlist: (symbol: string) => void
 }
 
-type Draft = Pick<State, 'workspaces' | 'activeWorkspaceId' | 'watchlist' | 'history'>
+type Draft = Pick<State, 'workspaces' | 'activeWorkspaceId' | 'watchlist' | 'history' | 'portfolio'>
 
 function current(s: Draft): Workspace {
   return s.workspaces.find((w) => w.id === s.activeWorkspaceId) ?? s.workspaces[0]
@@ -188,6 +225,7 @@ export const useWorkspace = create<State>()(
         activeWorkspaceId: initial[0].id,
         watchlist: DEFAULT_WATCHLIST,
         history: [],
+        portfolio: SAMPLE_PORTFOLIO,
 
         selectWorkspace: (id) => set({ activeWorkspaceId: id }),
         cycleWorkspace: (offset) =>
@@ -218,7 +256,12 @@ export const useWorkspace = create<State>()(
           }),
         resetAll: () => {
           const ws = defaultWorkspaces()
-          set({ workspaces: ws, activeWorkspaceId: ws[0].id, watchlist: DEFAULT_WATCHLIST })
+          set({
+            workspaces: ws,
+            activeWorkspaceId: ws[0].id,
+            watchlist: DEFAULT_WATCHLIST,
+            portfolio: SAMPLE_PORTFOLIO,
+          })
         },
 
         focusPane: (id) => set((s) => updateWorkspace(s, (w) => ({ ...w, activePaneId: id }))),
@@ -352,6 +395,7 @@ export const useWorkspace = create<State>()(
           return null
         },
 
+        setPortfolio: (patch) => set((s) => ({ portfolio: { ...s.portfolio, ...patch } })),
         addToWatchlist: (item) =>
           set((s) =>
             s.watchlist.some((w) => w.symbol === item.symbol)
@@ -364,7 +408,7 @@ export const useWorkspace = create<State>()(
     },
     {
       name: 'tessera.workspace',
-      version: 3,
+      version: 4,
       // Saved layouts are kept on upgrade; new preset workspaces are appended.
       migrate: (persisted, version) => {
         const state = persisted as Draft
@@ -377,6 +421,7 @@ export const useWorkspace = create<State>()(
         activeWorkspaceId: s.activeWorkspaceId,
         watchlist: s.watchlist,
         history: s.history,
+        portfolio: s.portfolio,
       }),
     },
   ),

@@ -17,6 +17,7 @@ import { Monitor } from './Monitor'
 import { Most } from './Most'
 import { News } from './News'
 import { Omon } from './Omon'
+import { Port } from './Port'
 import type { FunctionCode } from './registry'
 import { Sov } from './Sov'
 import type { FnProps } from './types'
@@ -38,6 +39,7 @@ export const COMPONENTS: Record<FunctionCode, ComponentType<FnProps>> = {
   OMON: Omon,
   IVOL: Ivol,
   BOND: Bond,
+  PORT: Port,
   WEI: (p) => <Monitor {...p} id="WEI" />,
   CMDTY: (p) => <Monitor {...p} id="CMDTY" />,
   WL: Watchlist,

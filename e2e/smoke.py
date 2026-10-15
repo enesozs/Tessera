@@ -69,6 +69,7 @@ def main() -> int:
             "Watchlist",
             "Valuation · RACE",
             "Options · SPY",
+            "Portfolio",
         ]
         for i, name in enumerate(workspaces):
             page.get_by_role("navigation", name="Workspaces").get_by_text(name).click()
@@ -117,6 +118,16 @@ def main() -> int:
         command(page, "YC US")
         page.get_by_role("button", name="Zero & fwd").click()
         settle(page)
+
+        # PORT: editing the holdings re-runs the analysis on the new portfolio.
+        command(page, "PORT RISK")
+        settle(page)
+        page.get_by_role("button", name="Edit", exact=True).click()
+        page.get_by_label("Holdings").fill("AAPL 10\nMSFT 10\nGLD 5")
+        page.get_by_role("button", name="Apply (3)").click()
+        expect(page.get_by_text("3 holdings")).to_be_visible()
+        settle(page)
+        expect(page.get_by_text("monte carlo", exact=True)).to_be_visible()  # CSS capitalises it
 
         # OMON: switching to the Greeks view shows delta columns.
         command(page, "SPY OMON")

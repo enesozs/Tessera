@@ -26,9 +26,9 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
 
 ## 2. Current state (2026-10-15)
 
-**MVP complete; roadmap phases 1 (equity depth), 2 (options) and 3 (fixed income) complete.**
-22 functions: `DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON IVOL WEI CMDTY MOST WL FX YC SOV
-BOND ECO HELP`.
+**MVP complete; roadmap phases 1–4 (equity depth, options, fixed income, portfolio) complete.**
+23 functions: `DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON IVOL PORT WEI CMDTY MOST WL FX YC
+SOV BOND ECO HELP`.
 
 - Phase 1 added: `DCF` (pure model in `tessera/dcf.py`, inputs/defaults with stated sources in
   `tessera/valuation.py`; refuses banks/insurers with a reason, HTTP 422), `COMP` (Yahoo industry
@@ -48,16 +48,23 @@ BOND ECO HELP`.
   forward; U.S. par yields bootstrapped on a half-year grid, ECB spot rates used directly;
   monotone cubic (PCHIP) interpolation so forwards have no jumps). `YC` gains a Zero & fwd
   view; `BOND` reports G-spread and Z-spread to those curves.
-- Shell: workspace tabs (6 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
-  Valuation · RACE, Options · SPY — the last two added by persisted-state migrations,
-  versions 2 and 3), 1–6 tiled
+- Phase 4 added: `PORT` — `tessera/risk.py` (pure NumPy: Ledoit–Wolf shrinkage checked against
+  scikit-learn, Euler risk contributions, historical/parametric/Monte Carlo VaR & ES, max
+  drawdown, minimum variance, Spinu risk parity) and `tessera/portfolio.py` (holdings in any
+  currency → daily total-return prices in the base currency at ECB rates; stats vs a benchmark,
+  exposures, correlation, five historical stress replays with a beta proxy for holdings not yet
+  listed, hypothetical equity/FX shocks, in-sample optimised alternatives). The portfolio is
+  stored in the browser (`portfolio` in the workspace store, editable by pasting TICKER SHARES).
+- Shell: workspace tabs (7 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
+  Valuation · RACE, Options · SPY, Portfolio — the last three added by persisted-state
+  migrations, versions 2–4), 1–6 tiled
   resizable panes, maximise, duplicate, link groups (4 colours), command line with autocomplete
   (functions, Yahoo search, examples, history), name→ticker resolution, global shortcuts,
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 71 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
-  cleaning → SVI, bonds vs QuantLib), 7 frontend (vitest, command
+- Tests: 82 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
+  cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn), 9 frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
   round-trip (`make e2e`).
 
@@ -123,7 +130,8 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
    callable bonds / yield-to-worst, key-rate durations, inflation-linked bonds.
 3. ~~**Options:** `OMON`, `IVOL` via project 05's `derivlab`~~ — done. Next: strategy payoff
    builder on live chain prices, IV history per ticker (needs our own storage).
-4. **Portfolio:** `PORT` holdings import, exposures, correlation, VaR/ES, stress (reuse project 03 ideas).
+4. ~~**Portfolio:** `PORT`~~ — done. Next: transactions and cost basis (realised/unrealised P&L),
+   several named portfolios, factor exposures, Brinson attribution.
 5. **Query & alerts:** `QUERY` screening language over a cached universe, price/macro alerts.
 6. **Platform:** Postgres for point-in-time storage, Docker, deploy (static UI + hosted API).
 7. **AI:** `ASK` — Claude with typed tools over the terminal's own endpoints, cited answers.

@@ -16,6 +16,7 @@ export type FunctionCode =
   | 'OMON'
   | 'IVOL'
   | 'BOND'
+  | 'PORT'
   | 'WEI'
   | 'CMDTY'
   | 'WL'
@@ -26,7 +27,14 @@ export type FunctionCode =
   | 'HELP'
 
 export type Category =
-  'Security' | 'Valuation' | 'Options' | 'Markets' | 'Rates & FX' | 'Macro' | 'Terminal'
+  | 'Security'
+  | 'Valuation'
+  | 'Options'
+  | 'Portfolio'
+  | 'Markets'
+  | 'Rates & FX'
+  | 'Macro'
+  | 'Terminal'
 
 export interface FunctionSpec {
   code: FunctionCode
@@ -156,6 +164,17 @@ export const FUNCTIONS: FunctionSpec[] = [
       'Volatility smile per expiry with an SVI fit, ATM term structure vs realised volatility, skew and arbitrage checks.',
     syntax: '<TICKER> IVOL',
     examples: ['SPY IVOL', 'NVDA IVOL'],
+  },
+  {
+    code: 'PORT',
+    title: 'Portfolio risk',
+    category: 'Portfolio',
+    security: false,
+    source: true,
+    summary:
+      'Holdings in any currency → value, exposures, risk contributions, VaR/ES (3 methods), historical stress replays and optimised alternatives.',
+    syntax: 'PORT [OVERVIEW|RISK|STRESS|OPT]',
+    examples: ['PORT', 'PORT RISK', 'PORT STRESS'],
   },
   {
     code: 'WEI',

@@ -1,12 +1,13 @@
 // Thin ECharts wrapper (tree-shaken build) for charts whose x-axis is not time, e.g. tenors.
 
-import { LineChart as ELine, BarChart, ScatterChart } from 'echarts/charts'
+import { LineChart as ELine, BarChart, HeatmapChart, ScatterChart } from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
   TooltipComponent,
   MarkLineComponent,
   MarkPointComponent,
+  VisualMapComponent,
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -16,6 +17,8 @@ echarts.use([
   ELine,
   BarChart,
   ScatterChart,
+  HeatmapChart,
+  VisualMapComponent,
   GridComponent,
   LegendComponent,
   TooltipComponent,

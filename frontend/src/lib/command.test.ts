@@ -62,6 +62,8 @@ describe('parseCommand', () => {
       params: { coupon: '5', quote: 'yield', value: '6.1' },
     })
     expect(parseCommand('BOND P')).toMatchObject({ kind: 'error' })
+    expect(parseCommand('port stress')).toMatchObject({ fn: 'PORT', params: { view: 'stress' } })
+    expect(parseCommand('PORT VAR')).toMatchObject({ kind: 'error' })
   })
 
   it('turns watchlist verbs into actions', () => {
