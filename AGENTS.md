@@ -26,21 +26,30 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
 
 ## 2. Current state (2026-10-15)
 
-**MVP complete; roadmap phase 1 (equity depth) complete.** 19 functions:
-`DES GP HP FA NEWS FIL DVD ERN DCF COMP WEI CMDTY MOST WL FX YC SOV ECO HELP`.
+**MVP complete; roadmap phases 1 (equity depth) and 2 (options) complete.** 21 functions:
+`DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON IVOL WEI CMDTY MOST WL FX YC SOV ECO HELP`.
 
 - Phase 1 added: `DCF` (pure model in `tessera/dcf.py`, inputs/defaults with stated sources in
   `tessera/valuation.py`; refuses banks/insurers with a reason, HTTP 422), `COMP` (Yahoo industry
   peers filtered by index weight, or a custom list; medians exclude negative multiples), `GP … VS …`
   compare mode (Lightweight Charts percentage scale), `ERN`, `DVD`, `MOST` (`providers/research.py`).
-- Shell: workspace tabs (5 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
-  Valuation · RACE — the last added by a persisted-state migration, version 2), 1–6 tiled
+- Phase 2 added: `OMON` (chain by strike, quotes or Greeks view, ATM-centred, leg detail) and
+  `IVOL` (smile + SVI fit per expiry, ATM term structure vs realised vol, skew, butterfly flags)
+  in `tessera/options.py`. All analytics come from **derivlab** (project 05): parity forward
+  (`data.cleaning`), implied vol, analytic Greeks, `fit_svi`. Discounting uses
+  `rates.risk_free_rate(t)` (Treasury par curve → continuous). derivlab is an editable install
+  from `../05-derivatives-pricing-lab/backend` (see Makefile); restart `make dev` after
+  installing it, the reloader does not pick up new packages.
+- Shell: workspace tabs (6 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
+  Valuation · RACE, Options · SPY — the last two added by persisted-state migrations,
+  versions 2 and 3), 1–6 tiled
   resizable panes, maximise, duplicate, link groups (4 colours), command line with autocomplete
   (functions, Yahoo search, examples, history), name→ticker resolution, global shortcuts,
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 41 backend (pytest, offline — includes a hand-computed DCF), 7 frontend (vitest, command
+- Tests: 47 backend (pytest, offline — includes a hand-computed DCF and a synthetic Heston
+  chain through cleaning → SVI), 7 frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
   round-trip (`make e2e`).
 
@@ -104,7 +113,8 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
 1. ~~**Equity depth:** `DCF`, `COMP`, `GP` compare, `DVD`, `ERN`, `MOST`~~ — done.
 2. **Fixed income:** `BOND` calculator (price ↔ yield, accrued, duration, convexity, DV01),
    bootstrapped spot/forward curves from par yields, curve shock P&L.
-3. **Options:** `OPT` chain from Yahoo, IV smile/term structure, pricing via project 05's `derivlab`.
+3. ~~**Options:** `OMON`, `IVOL` via project 05's `derivlab`~~ — done. Next: strategy payoff
+   builder on live chain prices, IV history per ticker (needs our own storage).
 4. **Portfolio:** `PORT` holdings import, exposures, correlation, VaR/ES, stress (reuse project 03 ideas).
 5. **Query & alerts:** `QUERY` screening language over a cached universe, price/macro alerts.
 6. **Platform:** Postgres for point-in-time storage, Docker, deploy (static UI + hosted API).

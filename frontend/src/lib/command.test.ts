@@ -49,6 +49,11 @@ describe('parseCommand', () => {
     expect(parseCommand('race comp')).toMatchObject({ params: { peers: '' } })
     expect(parseCommand('most losers')).toMatchObject({ fn: 'MOST', params: { kind: 'losers' } })
     expect(parseCommand('RACE DCF')).toMatchObject({ fn: 'DCF', security: 'RACE' })
+    expect(parseCommand('spy omon 2026-12-18')).toMatchObject({
+      fn: 'OMON',
+      params: { expiry: '2026-12-18' },
+    })
+    expect(parseCommand('SPY OMON DEC')).toMatchObject({ kind: 'error' })
   })
 
   it('turns watchlist verbs into actions', () => {

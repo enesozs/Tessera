@@ -14,6 +14,8 @@ install:            ## Create the Python venv and install both halves
 	python3 -m venv backend/.venv
 	$(PY)/pip install -q --upgrade pip
 	$(PY)/pip install -q -e "backend[dev]"
+	# Option analytics (OMON, IVOL) use the pricing library from the sibling project 05.
+	$(PY)/pip install -q -e ../05-derivatives-pricing-lab/backend
 	cd frontend && npm install
 
 dev:                ## API on :8010 + Vite on :5180 (open http://localhost:5180)

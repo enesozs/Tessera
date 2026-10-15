@@ -436,3 +436,73 @@ export interface Mover {
   avg_volume_3m: number | null
   market_cap: number | null
 }
+
+// ── Options ───────────────────────────────────────────────────────────────────
+
+export interface OptionLeg {
+  contract: string
+  bid: number | null
+  ask: number | null
+  last: number | null
+  volume: number | null
+  open_interest: number | null
+  last_trade: string | null
+  in_the_money: boolean
+  price: number | null
+  price_source: 'mid' | 'last' | null
+  iv: number | null
+  yahoo_iv: number | null
+  delta: number | null
+  gamma: number | null
+  theta_per_day: number | null
+  vega_per_point: number | null
+}
+
+export interface OptionChainView {
+  symbol: string
+  currency: string | null
+  spot: number
+  expiries: string[]
+  expiry: string
+  days: number
+  t: number
+  rate: number
+  dividend_yield: number
+  forward: number
+  forward_method: string
+  atm_strike: number | null
+  rows: { strike: number; call: OptionLeg | null; put: OptionLeg | null }[]
+  totals: {
+    call_volume: number
+    put_volume: number
+    call_open_interest: number
+    put_open_interest: number
+    put_call_volume: number | null
+    put_call_open_interest: number | null
+  }
+}
+
+export interface SmileSlice {
+  expiry: string
+  days: number
+  t: number
+  forward: number
+  atm_vol: number
+  points: { strike: number; log_moneyness: number; iv: number; kind: string; source: string }[]
+  fit_strikes: number[]
+  fit_iv: number[]
+  rmse: number | null
+  butterfly_arbitrage: boolean
+  skew_90_110: number | null
+  dropped: Record<string, number>
+}
+
+export interface VolSurfaceView {
+  symbol: string
+  spot: number
+  price_basis: string
+  rate: number
+  slices: SmileSlice[]
+  realized_vol_30d: number | null
+  realized_vol_90d: number | null
+}

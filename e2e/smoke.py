@@ -61,7 +61,14 @@ def main() -> int:
         expect(page.get_by_text("API connected")).to_be_visible(timeout=15_000)
 
         # Each default workspace loads without errors.
-        workspaces = ["Markets", "Equity · RACE", "Rates & Macro", "Watchlist", "Valuation · RACE"]
+        workspaces = [
+            "Markets",
+            "Equity · RACE",
+            "Rates & Macro",
+            "Watchlist",
+            "Valuation · RACE",
+            "Options · SPY",
+        ]
         for i, name in enumerate(workspaces):
             page.get_by_role("navigation", name="Workspaces").get_by_text(name).click()
             settle(page)
@@ -89,6 +96,8 @@ def main() -> int:
             "NVDA ERN",
             "MOST LOSERS",
             "MSFT DCF",
+            "AAPL OMON",
+            "AAPL IVOL",
             "HELP",
         ]:
             command(page, cmd)
@@ -97,6 +106,14 @@ def main() -> int:
         command(page, "ECO US.CPI")
         settle(page)
         shot(page, "fn-eco-series")
+
+        # OMON: switching to the Greeks view shows delta columns.
+        command(page, "SPY OMON")
+        settle(page)
+        page.get_by_role("button", name="Greeks").click()
+        expect(
+            page.get_by_title("Delta: option value change per 1 unit of the underlying").first
+        ).to_be_visible()
 
         # DCF: editing an assumption recomputes the valuation; banks are refused with a reason.
         command(page, "RACE DCF")

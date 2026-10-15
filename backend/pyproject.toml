@@ -12,6 +12,8 @@ dependencies = [
     "httpx>=0.28",
     "pandas>=2.2",
     "yfinance>=1.7",
+    # Also requires `derivlab` (QuantProjects/05-derivatives-pricing-lab/backend), installed
+    # editable by `make install`; a relative path cannot be declared portably here.
 ]
 
 [project.optional-dependencies]

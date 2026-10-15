@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from tessera import dcf, markets, valuation
+from tessera import dcf, markets, options, valuation
 from tessera.errors import (
     ConfigurationError,
     NotApplicableError,
@@ -134,6 +134,21 @@ def comps(
     symbol: Symbol, peers: Annotated[str | None, Query(max_length=200)] = None
 ) -> Envelope[valuation.Comps]:
     return valuation.comps(symbol.upper(), _symbols(peers)[:12])
+
+
+# ── Options ───────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/options/chain")
+def option_chain(
+    symbol: Symbol, expiry: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")] = None
+) -> Envelope[options.OptionChainView]:
+    return options.option_chain(symbol.upper(), expiry)
+
+
+@app.get("/api/options/surface")
+def option_surface(symbol: Symbol) -> Envelope[options.VolSurfaceView]:
+    return options.vol_surface(symbol.upper())
 
 
 # ── Markets ───────────────────────────────────────────────────────────────────

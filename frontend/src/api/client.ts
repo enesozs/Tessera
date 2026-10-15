@@ -15,6 +15,8 @@ import type {
   MacroSeries,
   MacroSummary,
   Monitor,
+  OptionChainView,
+  VolSurfaceView,
   Mover,
   MoverKind,
   PeriodKind,
@@ -267,6 +269,24 @@ export const useMovers = (kind: MoverKind) =>
     queryFn: () => get<Envelope<Mover[]>>('/movers', { kind }),
     staleTime: MIN,
     refetchInterval: 2 * MIN,
+  })
+
+export const useOptionChain = (symbol: string | undefined, expiry: string | undefined) =>
+  useQuery({
+    queryKey: ['option-chain', symbol, expiry ?? null],
+    queryFn: () => get<Envelope<OptionChainView>>('/options/chain', { symbol, expiry }),
+    enabled: !!symbol,
+    staleTime: MIN,
+    refetchInterval: 2 * MIN,
+    placeholderData: (prev) => (prev?.data.symbol === symbol ? prev : undefined),
+  })
+
+export const useVolSurface = (symbol: string | undefined) =>
+  useQuery({
+    queryKey: ['vol-surface', symbol],
+    queryFn: () => get<Envelope<VolSurfaceView>>('/options/surface', { symbol }),
+    enabled: !!symbol,
+    staleTime: 10 * MIN,
   })
 
 export const fetchSearch = (q: string) => get<Envelope<SecurityHit[]>>('/search', { q })

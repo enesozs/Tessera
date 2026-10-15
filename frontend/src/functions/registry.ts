@@ -13,6 +13,8 @@ export type FunctionCode =
   | 'ERN'
   | 'DVD'
   | 'MOST'
+  | 'OMON'
+  | 'IVOL'
   | 'WEI'
   | 'CMDTY'
   | 'WL'
@@ -22,7 +24,8 @@ export type FunctionCode =
   | 'ECO'
   | 'HELP'
 
-export type Category = 'Security' | 'Valuation' | 'Markets' | 'Rates & FX' | 'Macro' | 'Terminal'
+export type Category =
+  'Security' | 'Valuation' | 'Options' | 'Markets' | 'Rates & FX' | 'Macro' | 'Terminal'
 
 export interface FunctionSpec {
   code: FunctionCode
@@ -132,6 +135,26 @@ export const FUNCTIONS: FunctionSpec[] = [
       'Multiples, margins and growth against industry peers (or your own list), with peer medians.',
     syntax: '<TICKER> COMP [<PEER> …]',
     examples: ['RACE COMP', 'RACE COMP P911.DE STLA TM MBG.DE'],
+  },
+  {
+    code: 'OMON',
+    title: 'Option monitor',
+    category: 'Options',
+    security: true,
+    summary:
+      'Calls and puts by strike for one expiry: quotes, volume, open interest, implied vol and Greeks computed with derivlab.',
+    syntax: '<TICKER> OMON [YYYY-MM-DD]',
+    examples: ['AAPL OMON', 'SPY OMON'],
+  },
+  {
+    code: 'IVOL',
+    title: 'Implied volatility',
+    category: 'Options',
+    security: true,
+    summary:
+      'Volatility smile per expiry with an SVI fit, ATM term structure vs realised volatility, skew and arbitrage checks.',
+    syntax: '<TICKER> IVOL',
+    examples: ['SPY IVOL', 'NVDA IVOL'],
   },
   {
     code: 'WEI',

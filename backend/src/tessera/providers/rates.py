@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import csv
 import io
+import itertools
+import math
 from collections.abc import Sequence
 from datetime import date, timedelta
 from typing import Literal
@@ -307,3 +309,27 @@ def sovereign_10y(countries: tuple[str, ...]) -> Envelope[SovereignYields]:
             ],
         ),
     )
+
+
+def risk_free_rate(t: float) -> tuple[float, str]:
+    """Continuously compounded U.S. Treasury rate for maturity `t` years, and its label.
+
+    Linear interpolation of the latest par curve, converted from a semi-annual bond-equivalent
+    yield: r = 2·ln(1 + y/2). Close enough to a zero rate for discounting short-dated options.
+    """
+    curve = us_curve().data
+    latest = curve.snapshots[0]
+    points = [
+        (x, y) for x, y in zip(curve.tenor_years, latest.yields, strict=True) if y is not None
+    ]
+    if not points:
+        raise NotFoundError("Treasury curve has no yields")
+    y = points[-1][1]
+    if t <= points[0][0]:
+        y = points[0][1]
+    elif t < points[-1][0]:
+        for (x0, y0), (x1, y1) in itertools.pairwise(points):
+            if x0 <= t <= x1:
+                y = y0 + (y1 - y0) * (t - x0) / (x1 - x0)
+                break
+    return 2 * math.log(1 + y / 200), f"U.S. Treasury curve at {t:.2f}y ({latest.date})"

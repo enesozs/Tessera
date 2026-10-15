@@ -22,7 +22,8 @@ cp .env.example .env   # optional: set SEC_USER_AGENT to enable SEC filings (FIL
 make dev            # API on :8010, UI on http://localhost:5180
 ```
 
-Requires Python 3.12+ and Node 20+. The ports differ from the other QuantProjects (8000/5173)
+Requires Python 3.12+, Node 20+ and the sibling project `../05-derivatives-pricing-lab`, whose
+pricing library (`derivlab`) computes the option analytics; `make install` installs it. The ports differ from the other QuantProjects (8000/5173)
 so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`.
 
 ## Functions
@@ -40,6 +41,8 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 | `DCF` | FCFF valuation with sourced, editable assumptions and sensitivity grid | `RACE DCF` |
 | `COMP` | Multiples, margins and growth vs industry or custom peers | `RACE COMP P911.DE STLA` |
 | `MOST` | Top U.S. gainers, losers and most active | `MOST LOSERS` |
+| `OMON` | Option chain by strike: quotes, volume, OI, implied vol and Greeks | `SPY OMON` |
+| `IVOL` | Volatility smile with SVI fit, ATM term structure vs realised vol, skew | `NVDA IVOL` |
 | `WEI` | World equity indices by region | `WEI` |
 | `CMDTY` | Energy, metals and agriculture futures | `CMDTY` |
 | `WL` | Your watchlist (stored in the browser) | `WL ADD ASML` |

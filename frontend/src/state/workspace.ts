@@ -77,7 +77,17 @@ export function defaultWorkspaces(): Workspace[] {
       pane('CMDTY', { link: 'lime' }),
     ]),
     valuationWorkspace(),
+    optionsWorkspace(),
   ]
+}
+
+/** Added in layout version 3: listed options. */
+function optionsWorkspace(): Workspace {
+  return workspace('Options · SPY', [
+    pane('OMON', { link: 'cyan', security: 'SPY' }),
+    pane('IVOL', { link: 'cyan', security: 'SPY' }),
+    pane('GP', { link: 'cyan', security: 'SPY', params: { range: '1Y' } }),
+  ])
 }
 
 /** Added in layout version 2: the equity valuation workflow. */
@@ -353,7 +363,7 @@ export const useWorkspace = create<State>()(
     },
     {
       name: 'tessera.workspace',
-      version: 2,
+      version: 3,
       // Saved layouts are kept on upgrade; new preset workspaces are appended.
       migrate: (persisted, version) => {
         const state = persisted as Draft
