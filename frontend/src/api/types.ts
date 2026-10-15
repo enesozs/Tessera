@@ -635,3 +635,36 @@ export interface PortfolioAnalysis {
     max_drawdown: number
   }[]
 }
+
+// ── Screener ──────────────────────────────────────────────────────────────────
+
+export interface ScreenRow {
+  symbol: string
+  name: string
+  exchange: string | null
+  currency: string | null
+  price: number | null
+  change_pct: number | null
+  market_cap: number | null
+  trailing_pe: number | null
+  forward_pe: number | null
+  price_to_book: number | null
+  dividend_yield: number | null
+  perf_52w: number | null
+  volume: number | null
+}
+
+export interface ScreenResult {
+  query: string
+  total: number
+  sort: string
+  rows: ScreenRow[]
+  warnings: string[]
+}
+
+export interface ScreenField {
+  name: string
+  label: string
+  kind: 'category' | 'money' | 'percent' | 'number'
+  group: string
+}

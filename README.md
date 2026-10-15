@@ -44,6 +44,8 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 | `OMON` | Option chain by strike: quotes, volume, OI, implied vol and Greeks | `SPY OMON` |
 | `IVOL` | Volatility smile with SVI fit, ATM term structure vs realised vol, skew | `NVDA IVOL` |
 | `PORT` | Portfolio in any currency mix: exposures, risk contributions, VaR/ES, stress replays, optimised alternatives | `PORT RISK` |
+| `EQS` | Screen any market on 30+ fundamentals with a query language | `FIND EQUITIES WHERE COUNTRY = IT AND ROE > 15%` |
+| `ALRT` | Price alerts (toast + optional desktop notification) | `ALRT ADD AAPL > 350` |
 | `WEI` | World equity indices by region | `WEI` |
 | `CMDTY` | Energy, metals and agriculture futures | `CMDTY` |
 | `WL` | Your watchlist (stored in the browser) | `WL ADD ASML` |
@@ -57,6 +59,10 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 **Grammar:** `<TICKER>`, `<FUNCTION> [ARGS]`, or `<TICKER> <FUNCTION> [ARGS]`. Enter runs in
 the active pane, Shift+Enter in a new one. Typing a company name (`ferrari`) resolves it
 through search. Start typing anywhere to reach the command line.
+
+**Every pane** can export its tables as CSV (⤓) or pop out into its own window for a second
+monitor (↗). **Share** (top bar) copies a link that recreates the current workspace — layout and
+settings only, no data.
 
 **Keyboard:** `Alt 1–6` focus a pane · `Alt M` maximise · `Alt N` duplicate · `Alt W` close ·
 `Alt L` cycle link colour · `Alt [ ]` switch workspace · `/` or `Ctrl K` command line.

@@ -1,10 +1,12 @@
 import type { ComponentType } from 'react'
+import { Alrt } from './Alrt'
 import { Bond } from './Bond'
 import { Comp } from './Comp'
 import { Dcf } from './Dcf'
 import { Des } from './Des'
 import { Dvd } from './Dvd'
 import { Eco } from './Eco'
+import { Eqs } from './Eqs'
 import { Ern } from './Ern'
 import { Fa } from './Fa'
 import { Fil } from './Fil'
@@ -40,6 +42,8 @@ export const COMPONENTS: Record<FunctionCode, ComponentType<FnProps>> = {
   IVOL: Ivol,
   BOND: Bond,
   PORT: Port,
+  EQS: Eqs,
+  ALRT: Alrt,
   WEI: (p) => <Monitor {...p} id="WEI" />,
   CMDTY: (p) => <Monitor {...p} id="CMDTY" />,
   WL: Watchlist,

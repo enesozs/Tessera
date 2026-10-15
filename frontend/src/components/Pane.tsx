@@ -1,9 +1,12 @@
 import clsx from 'clsx'
-import { Component, type ReactNode } from 'react'
+import { Component, useRef, type ReactNode } from 'react'
 import { useProfile } from '@/api/client'
 import { COMPONENTS } from '@/functions'
 import { BY_CODE, FUNCTIONS } from '@/functions/registry'
 import { parseCommand } from '@/lib/command'
+import { download, tablesToCsv } from '@/lib/csv'
+import { encode } from '@/lib/share'
+import { useToasts } from '@/state/toasts'
 import { useWorkspace, type LinkGroup, type Pane as PaneState } from '@/state/workspace'
 import { ErrorState } from '@/ui/primitives'
 
@@ -30,8 +33,24 @@ export function Pane({
   const toggleMaximize = useWorkspace((s) => s.toggleMaximize)
   const cycleLink = useWorkspace((s) => s.cycleLink)
   const splitPane = useWorkspace((s) => s.splitPane)
+  const push = useToasts((s) => s.push)
+  const bodyRef = useRef<HTMLDivElement>(null)
   const spec = pane.fn ? BY_CODE[pane.fn] : null
   const Body = pane.fn ? COMPONENTS[pane.fn] : null
+
+  const exportCsv = () => {
+    const csv = bodyRef.current ? tablesToCsv(bodyRef.current) : ''
+    if (!csv) return push('Nothing to export: this view has no tables')
+    const name = [pane.fn, pane.security, new Date().toISOString().slice(0, 10)]
+      .filter(Boolean)
+      .join('-')
+    download(`${name}.csv`.replace(/[^\w.-]+/g, '_'), csv)
+  }
+  const popOut = () => {
+    const { fn, security, params, link } = pane
+    const url = `${window.location.pathname}?popout=${encode({ fn, security, params, link })}`
+    window.open(url, `tessera-${pane.id}`, 'popup,width=960,height=680')
+  }
 
   return (
     <section
@@ -79,6 +98,12 @@ export function Pane({
           {spec?.security && pane.security && <SecurityName symbol={pane.security} />}
         </span>
         <span className="flex-1" />
+        <HeaderButton title="Export tables as CSV" onClick={exportCsv}>
+          <path d="M6 1v7M3 5l3 3 3-3M1 10h10" />
+        </HeaderButton>
+        <HeaderButton title="Pop out into its own window (for a second monitor)" onClick={popOut}>
+          <path d="M7 1h4v4M11 1L5.5 6.5M9 7v4H1V3h4" />
+        </HeaderButton>
         <HeaderButton title="Duplicate pane (Alt N)" onClick={() => splitPane(pane.id)}>
           <path d="M3 3h6v6H3zM6 1h5v5" />
         </HeaderButton>
@@ -96,7 +121,7 @@ export function Pane({
           <path d="M2 2l8 8M10 2l-8 8" />
         </HeaderButton>
       </header>
-      <div className="min-h-0 flex-1">
+      <div ref={bodyRef} className="min-h-0 flex-1">
         <ErrorBoundary key={`${pane.fn}:${pane.security}`}>
           {Body ? <Body pane={pane} active={active} /> : <EmptyPane />}
         </ErrorBoundary>

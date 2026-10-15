@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from tessera import curves, dcf, fixed_income, markets, options, portfolio, valuation
+from tessera import curves, dcf, fixed_income, markets, options, portfolio, screener, valuation
 from tessera.errors import (
     ConfigurationError,
     NotApplicableError,
@@ -165,6 +165,18 @@ def quotes(
 ) -> Envelope[list[yahoo.Quote]]:
     wanted = tuple(dict.fromkeys(s.strip().upper() for s in symbols.split(",") if s.strip()))
     return yahoo.quotes(wanted[:40])
+
+
+@app.get("/api/screen")
+def screen(
+    q: Annotated[str, Query(min_length=3, max_length=600)],
+) -> Envelope[screener.ScreenResult]:
+    return screener.run(" ".join(q.split()))
+
+
+@app.get("/api/screen/fields")
+def screen_fields() -> list[screener.FieldInfo]:
+    return screener.fields()
 
 
 @app.get("/api/movers")

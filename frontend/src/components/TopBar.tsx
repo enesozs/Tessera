@@ -1,6 +1,8 @@
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
-import { useWorkspace } from '@/state/workspace'
+import { encode } from '@/lib/share'
+import { useToasts } from '@/state/toasts'
+import { POPOUT_PANE, useActiveWorkspace, useWorkspace } from '@/state/workspace'
 
 // Regular continuous-trading hours in exchange-local time. Holidays and half-days are not
 // modelled, hence "approx." in the tooltip.
@@ -174,11 +176,48 @@ function Tabs() {
   )
 }
 
+function ShareButton() {
+  const ws = useActiveWorkspace()
+  const push = useToasts((s) => s.push)
+  const share = async () => {
+    const spec = {
+      name: ws.name,
+      panes: ws.panes.map(({ fn, security, params, link }) => ({ fn, security, params, link })),
+    }
+    const url = `${window.location.origin}${window.location.pathname}?ws=${encode(spec)}`
+    try {
+      await navigator.clipboard.writeText(url)
+      push(`Link to "${ws.name}" copied — opening it adds the workspace as a new tab`)
+    } catch {
+      window.prompt('Copy this link', url)
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => void share()}
+      title="Copy a link that recreates this workspace (layout and settings, no data)"
+      className="h-[24px] shrink-0 rounded-[3px] px-2 text-[11px] text-fg-3 hover:bg-raised hover:text-amber"
+    >
+      Share
+    </button>
+  )
+}
+
 export function TopBar() {
   return (
     <div className="flex h-[34px] shrink-0 items-center gap-3 border-b border-line bg-canvas px-2.5">
       <Logo />
-      <Tabs />
+      {POPOUT_PANE ? (
+        <span className="text-[11px] text-fg-3">
+          Pop-out window · changes here stay in this window
+        </span>
+      ) : (
+        <>
+          <Tabs />
+          <ShareButton />
+        </>
+      )}
       <div className="flex-1" />
       <Clocks />
     </div>

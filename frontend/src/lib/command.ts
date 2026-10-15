@@ -17,7 +17,10 @@ export type Command =
   | { kind: 'function'; fn: FunctionCode; security?: string; params: Params; action?: Action }
   | { kind: 'error'; message: string }
 
-export type Action = { type: 'watchlist-add' | 'watchlist-remove'; symbol: string }
+export type Action =
+  | { type: 'watchlist-add' | 'watchlist-remove'; symbol: string }
+  | { type: 'alert-add'; symbol: string; op: 'above' | 'below'; price: number }
+  | { type: 'alert-remove'; symbol: string }
 
 const TICKER = /^[A-Z0-9][A-Z0-9.=^-]{0,23}$|^\^[A-Z0-9.-]{1,23}$/
 const CURRENCY = /^[A-Z]{3}$/
@@ -33,6 +36,8 @@ export function tokenize(input: string): string[] {
 export function parseCommand(input: string): Command {
   const tokens = tokenize(input)
   if (tokens.length === 0) return { kind: 'empty' }
+  // The blueprint's query language works straight from the command line.
+  if (tokens[0] === 'FIND') return withArgs('EQS', tokens)
   const [first, second, ...rest] = tokens
 
   if (second !== undefined && isFunctionCode(second)) {
@@ -126,6 +131,32 @@ export function parseArgs(fn: FunctionCode, args: string[]): ArgResult {
       if (args.length && !/^\d{4}-\d{2}-\d{2}$/.test(args[0])) return unknown(args[0])
       if (args.length) params.expiry = args[0]
       return { params }
+    case 'EQS':
+      if (args.length) params.q = args.join(' ')
+      return { params }
+    case 'ALRT': {
+      if (!args.length) return { params }
+      const [verb, symbol, op, price] = args
+      if (verb === 'DEL' || verb === 'RM') {
+        if (!symbol || !isTicker(symbol) || args.length > 2)
+          return { error: 'ALRT: use ALRT DEL <TICKER>' }
+        return { params, action: { type: 'alert-remove', symbol } }
+      }
+      const value = Number(price)
+      if (
+        verb !== 'ADD' ||
+        !symbol ||
+        !isTicker(symbol) ||
+        (op !== '>' && op !== '<') ||
+        !(value > 0) ||
+        args.length > 4
+      )
+        return { error: 'ALRT: use ALRT ADD <TICKER> > <PRICE> or ALRT ADD <TICKER> < <PRICE>' }
+      return {
+        params,
+        action: { type: 'alert-add', symbol, op: op === '>' ? 'above' : 'below', price: value },
+      }
+    }
     case 'MOST': {
       if (args.length > 1) return unknown(args[1])
       const kinds: Record<string, string> = {

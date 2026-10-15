@@ -26,9 +26,9 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
 
 ## 2. Current state (2026-10-15)
 
-**MVP complete; roadmap phases 1–4 (equity depth, options, fixed income, portfolio) complete.**
-23 functions: `DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON IVOL PORT WEI CMDTY MOST WL FX YC
-SOV BOND ECO HELP`.
+**MVP complete; roadmap phases 1–5 complete** (equity depth, options, fixed income, portfolio,
+screening & terminal experience). 25 functions: `DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON
+IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO HELP`.
 
 - Phase 1 added: `DCF` (pure model in `tessera/dcf.py`, inputs/defaults with stated sources in
   `tessera/valuation.py`; refuses banks/insurers with a reason, HTTP 422), `COMP` (Yahoo industry
@@ -55,6 +55,14 @@ SOV BOND ECO HELP`.
   exposures, correlation, five historical stress replays with a beta proxy for holdings not yet
   listed, hypothetical equity/FX shocks, in-sample optimised alternatives). The portfolio is
   stored in the browser (`portfolio` in the workspace store, editable by pasting TICKER SHARES).
+- Phase 5 added: `EQS` (`tessera/screener.py`: query language → neutral tree → Yahoo's
+  server-side screener; ~30 friendly fields, AND/OR/parentheses/BETWEEN/IN, SORT BY, LIMIT;
+  errors point at the bad word; warnings for local-currency sizes and secondary listings;
+  `FIND …` typed in the command line runs it), `ALRT` (alerts in the store, `AlertWatcher`
+  checks delayed quotes every minute → toast + optional desktop notification), CSV export of
+  any pane's tables (`lib/csv.ts`), pop-out panes (`?popout=`; such windows use sessionStorage
+  so they never overwrite the main layout) and share links (`?ws=`, sanitised on import;
+  `lib/share.ts`).
 - Shell: workspace tabs (7 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
   Valuation · RACE, Options · SPY, Portfolio — the last three added by persisted-state
   migrations, versions 2–4), 1–6 tiled
@@ -63,8 +71,9 @@ SOV BOND ECO HELP`.
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 82 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
-  cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn), 9 frontend (vitest, command
+- Tests: 97 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
+  cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn, the query parser), 14
+  frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
   round-trip (`make e2e`).
 
@@ -132,7 +141,8 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
    builder on live chain prices, IV history per ticker (needs our own storage).
 4. ~~**Portfolio:** `PORT`~~ — done. Next: transactions and cost basis (realised/unrealised P&L),
    several named portfolios, factor exposures, Brinson attribution.
-5. **Query & alerts:** `QUERY` screening language over a cached universe, price/macro alerts.
+5. ~~**Query & alerts:** `EQS` query language, `ALRT`, CSV export, pop-outs, share links~~ — done.
+   Next: saved screens, alerts on macro releases and portfolio drift.
 6. **Platform:** Postgres for point-in-time storage, Docker, deploy (static UI + hosted API).
 7. **AI:** `ASK` — Claude with typed tools over the terminal's own endpoints, cited answers.
 

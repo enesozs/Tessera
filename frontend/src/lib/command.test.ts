@@ -66,6 +66,28 @@ describe('parseCommand', () => {
     expect(parseCommand('PORT VAR')).toMatchObject({ kind: 'error' })
   })
 
+  it('passes screener queries through, including FIND EQUITIES WHERE', () => {
+    expect(parseCommand('eqs roe > 15% and country = it')).toMatchObject({
+      fn: 'EQS',
+      params: { q: 'ROE > 15% AND COUNTRY = IT' },
+    })
+    expect(parseCommand('find equities where pe < 10')).toMatchObject({
+      fn: 'EQS',
+      params: { q: 'FIND EQUITIES WHERE PE < 10' },
+    })
+  })
+
+  it('parses alert commands', () => {
+    expect(parseCommand('alrt add aapl > 350.5')).toMatchObject({
+      fn: 'ALRT',
+      action: { type: 'alert-add', symbol: 'AAPL', op: 'above', price: 350.5 },
+    })
+    expect(parseCommand('ALRT DEL AAPL')).toMatchObject({
+      action: { type: 'alert-remove', symbol: 'AAPL' },
+    })
+    expect(parseCommand('ALRT ADD AAPL = 3')).toMatchObject({ kind: 'error' })
+  })
+
   it('turns watchlist verbs into actions', () => {
     expect(parseCommand('wl add nvda')).toMatchObject({
       fn: 'WL',

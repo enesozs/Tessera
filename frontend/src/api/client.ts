@@ -21,6 +21,8 @@ import type {
   OptionChainView,
   PortfolioAnalysis,
   PortfolioRequest,
+  ScreenField,
+  ScreenResult,
   VolSurfaceView,
   Mover,
   MoverKind,
@@ -318,6 +320,22 @@ export const usePortfolio = (request: PortfolioRequest | null) =>
     enabled: !!request && request.holdings.length > 0,
     staleTime: 5 * MIN,
     placeholderData: keepPreviousData,
+  })
+
+export const useScreen = (q: string) =>
+  useQuery({
+    queryKey: ['screen', q],
+    queryFn: () => get<Envelope<ScreenResult>>('/screen', { q }),
+    enabled: q.trim().length >= 3,
+    staleTime: 5 * MIN,
+    retry: false,
+  })
+
+export const useScreenFields = () =>
+  useQuery({
+    queryKey: ['screen-fields'],
+    queryFn: () => get<ScreenField[]>('/screen/fields'),
+    staleTime: Infinity,
   })
 
 export const fetchSearch = (q: string) => get<Envelope<SecurityHit[]>>('/search', { q })

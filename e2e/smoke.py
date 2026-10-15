@@ -25,6 +25,7 @@ def shot(page: Page, name: str) -> None:
 
 
 def command(page: Page, text: str, *, new_pane: bool = False) -> None:
+    print(f"→ {text}", flush=True)  # progress, so a stall shows where it happened
     box = page.get_by_label("Command")
     box.click()
     box.fill(text)
@@ -117,6 +118,44 @@ def main() -> int:
         expect(page.get_by_label("Yield to maturity")).to_have_value(re.compile(r"^4\.8\d+$"))
         command(page, "YC US")
         page.get_by_role("button", name="Zero & fwd").click()
+        settle(page)
+
+        # EQS straight from the command line, with the blueprint's grammar.
+        command(page, "FIND EQUITIES WHERE COUNTRY = IT AND ROE > 15% LIMIT 10")
+        settle(page)
+        expect(page.get_by_text(re.compile(r"[\d,]+ matches · showing \d+"))).to_be_visible()
+        shot(page, "fn-eqs")
+
+        # CSV export downloads the visible table.
+        with page.expect_download() as dl:
+            page.get_by_title("Export tables as CSV").first.click()
+        assert dl.value.suggested_filename.startswith("EQS"), dl.value.suggested_filename
+
+        # An alert below the current price triggers on the next quote check.
+        command(page, "ALRT ADD AAPL > 1")
+        expect(page.get_by_text("AAPL rose above 1.000")).to_be_visible(timeout=20_000)
+        expect(page.get_by_text("Triggered", exact=False).first).to_be_visible()
+
+        # Pop-out: the pane opens alone in its own window.
+        with page.context.expect_page() as popup_info:
+            page.get_by_title("Pop out into its own window (for a second monitor)").first.click()
+        popup = popup_info.value
+        expect(popup.get_by_text("Pop-out window")).to_be_visible(timeout=15_000)
+        popup.close()
+
+        # Share links: a ?ws= URL adds the encoded workspace as a new tab.
+        link = page.evaluate(
+            """() => {
+              const ws = {name: 'Shared test', panes: [{fn: 'DES', security: 'MSFT', params: {}, link: null}]}
+              const bytes = new TextEncoder().encode(JSON.stringify(ws))
+              let bin = ''; for (const b of bytes) bin += String.fromCharCode(b)
+              return location.pathname + '?ws=' + btoa(bin).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '')
+            }"""
+        )
+        page.goto(BASE + link)
+        expect(
+            page.get_by_role("navigation", name="Workspaces").get_by_text("Shared test")
+        ).to_be_visible()
         settle(page)
 
         # PORT: editing the holdings re-runs the analysis on the new portfolio.

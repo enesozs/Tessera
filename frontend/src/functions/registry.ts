@@ -17,6 +17,8 @@ export type FunctionCode =
   | 'IVOL'
   | 'BOND'
   | 'PORT'
+  | 'EQS'
+  | 'ALRT'
   | 'WEI'
   | 'CMDTY'
   | 'WL'
@@ -175,6 +177,30 @@ export const FUNCTIONS: FunctionSpec[] = [
       'Holdings in any currency → value, exposures, risk contributions, VaR/ES (3 methods), historical stress replays and optimised alternatives.',
     syntax: 'PORT [OVERVIEW|RISK|STRESS|OPT]',
     examples: ['PORT', 'PORT RISK', 'PORT STRESS'],
+  },
+  {
+    code: 'EQS',
+    title: 'Equity screener',
+    category: 'Markets',
+    security: false,
+    source: true,
+    summary:
+      'Screen any market on 30+ fundamental fields with a query language; runs on Yahoo’s server-side screener.',
+    syntax: 'EQS <condition>  |  FIND EQUITIES WHERE <condition>',
+    examples: [
+      'EQS COUNTRY = IT AND ROE > 15%',
+      'FIND EQUITIES WHERE COUNTRY = US AND PE < 12 AND DIVYIELD > 4%',
+    ],
+  },
+  {
+    code: 'ALRT',
+    title: 'Price alerts',
+    category: 'Markets',
+    security: false,
+    source: true,
+    summary: 'Alerts when a price crosses a level; checked every minute while Tessera is open.',
+    syntax: 'ALRT [ADD <TICKER> >|< <PRICE> | DEL <TICKER>]',
+    examples: ['ALRT', 'ALRT ADD AAPL > 350', 'ALRT ADD RACE.MI < 300'],
   },
   {
     code: 'WEI',

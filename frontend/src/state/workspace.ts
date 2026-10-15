@@ -2,9 +2,10 @@
 // Persisted to localStorage so a reload restores exactly what was on screen.
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type { Command, Params } from '@/lib/command'
-import { BY_CODE, type FunctionCode } from '@/functions/registry'
+import { BY_CODE, isFunctionCode, type FunctionCode } from '@/functions/registry'
+import { decode, sanitizePanes, type WorkspaceSpec } from '@/lib/share'
 
 export const LINK_GROUPS = ['cyan', 'violet', 'lime', 'rose'] as const
 export type LinkGroup = (typeof LINK_GROUPS)[number] | null
@@ -55,6 +56,24 @@ export const SAMPLE_PORTFOLIO: PortfolioState = {
   ],
 }
 
+export interface Alert {
+  id: string
+  symbol: string
+  op: 'above' | 'below'
+  price: number
+  createdAt: string
+  triggeredAt?: string
+  triggeredPrice?: number
+}
+
+/** A pane opened in its own window (?popout=…); such windows keep their state per tab. */
+export const POPOUT_PANE: Pane | null = (() => {
+  if (typeof window === 'undefined') return null
+  const raw = new URLSearchParams(window.location.search).get('popout')
+  const pane = raw ? sanitizePanes([decode(raw)], isFunctionCode)[0] : undefined
+  return pane ? { ...pane, id: 'popout', fn: pane.fn as FunctionCode | null, link: null } : null
+})()
+
 export const MAX_PANES = 6
 
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -77,6 +96,7 @@ const workspace = (name: string, panes: Pane[]): Workspace => ({
 
 /** First-run layout: one workspace per signature workflow. */
 export function defaultWorkspaces(): Workspace[] {
+  if (POPOUT_PANE) return [workspace('Pop-out', [POPOUT_PANE])]
   return [
     workspace('Markets', [
       pane('WEI', { link: 'cyan', security: '^GSPC' }),
@@ -158,6 +178,7 @@ interface State {
   watchlist: WatchItem[]
   history: string[]
   portfolio: PortfolioState
+  alerts: Alert[]
 
   selectWorkspace: (id: string) => void
   cycleWorkspace: (offset: number) => void
@@ -179,11 +200,19 @@ interface State {
   run: (command: Command, options?: { newPane?: boolean; raw?: string }) => string | null
 
   setPortfolio: (patch: Partial<PortfolioState>) => void
+  addAlert: (alert: Pick<Alert, 'symbol' | 'op' | 'price'>) => void
+  removeAlert: (idOrSymbol: string) => void
+  triggerAlert: (id: string, price: number) => void
+  /** Add a workspace from a share link and switch to it. */
+  importWorkspace: (spec: WorkspaceSpec) => void
   addToWatchlist: (item: WatchItem) => void
   removeFromWatchlist: (symbol: string) => void
 }
 
-type Draft = Pick<State, 'workspaces' | 'activeWorkspaceId' | 'watchlist' | 'history' | 'portfolio'>
+type Draft = Pick<
+  State,
+  'workspaces' | 'activeWorkspaceId' | 'watchlist' | 'history' | 'portfolio' | 'alerts'
+>
 
 function current(s: Draft): Workspace {
   return s.workspaces.find((w) => w.id === s.activeWorkspaceId) ?? s.workspaces[0]
@@ -226,6 +255,7 @@ export const useWorkspace = create<State>()(
         watchlist: DEFAULT_WATCHLIST,
         history: [],
         portfolio: SAMPLE_PORTFOLIO,
+        alerts: [],
 
         selectWorkspace: (id) => set({ activeWorkspaceId: id }),
         cycleWorkspace: (offset) =>
@@ -369,11 +399,12 @@ export const useWorkspace = create<State>()(
             if (spec.security && !security && command.fn !== 'NEWS')
               return `${command.fn} needs a security — e.g. RACE ${command.fn}`
             next = { ...target, fn: command.fn, security, params: command.params }
-            if (command.action) {
-              const { type, symbol } = command.action
-              if (type === 'watchlist-add') s.addToWatchlist({ symbol })
-              else s.removeFromWatchlist(symbol)
-            }
+            const action = command.action
+            if (action?.type === 'watchlist-add') s.addToWatchlist({ symbol: action.symbol })
+            else if (action?.type === 'watchlist-remove') s.removeFromWatchlist(action.symbol)
+            else if (action?.type === 'alert-add')
+              s.addAlert({ symbol: action.symbol, op: action.op, price: action.price })
+            else if (action?.type === 'alert-remove') s.removeAlert(action.symbol)
           }
 
           ws = {
@@ -396,6 +427,37 @@ export const useWorkspace = create<State>()(
         },
 
         setPortfolio: (patch) => set((s) => ({ portfolio: { ...s.portfolio, ...patch } })),
+        addAlert: (a) =>
+          set((s) => ({
+            alerts: [...s.alerts, { ...a, id: uid(), createdAt: new Date().toISOString() }].slice(
+              -50,
+            ),
+          })),
+        removeAlert: (key) =>
+          set((s) => ({ alerts: s.alerts.filter((a) => a.id !== key && a.symbol !== key) })),
+        triggerAlert: (id, price) =>
+          set((s) => ({
+            alerts: s.alerts.map((a) =>
+              a.id === id
+                ? { ...a, triggeredAt: new Date().toISOString(), triggeredPrice: price }
+                : a,
+            ),
+          })),
+        importWorkspace: (spec) =>
+          set((s) => {
+            const panes = sanitizePanes(spec.panes, isFunctionCode).map((p) =>
+              pane(p.fn as FunctionCode | null, {
+                security: p.security,
+                params: p.params,
+                link: (LINK_GROUPS as readonly string[]).includes(p.link ?? '')
+                  ? (p.link as LinkGroup)
+                  : null,
+              }),
+            )
+            if (!panes.length) return s
+            const ws = workspace(String(spec.name || 'Shared').slice(0, 32), panes)
+            return { workspaces: [...s.workspaces, ws], activeWorkspaceId: ws.id }
+          }),
         addToWatchlist: (item) =>
           set((s) =>
             s.watchlist.some((w) => w.symbol === item.symbol)
@@ -408,6 +470,8 @@ export const useWorkspace = create<State>()(
     },
     {
       name: 'tessera.workspace',
+      // Pop-out windows keep their own state, so they never overwrite the main layout.
+      storage: createJSONStorage(() => (POPOUT_PANE ? sessionStorage : localStorage)),
       version: 4,
       // Saved layouts are kept on upgrade; new preset workspaces are appended.
       migrate: (persisted, version) => {
@@ -422,6 +486,7 @@ export const useWorkspace = create<State>()(
         watchlist: s.watchlist,
         history: s.history,
         portfolio: s.portfolio,
+        alerts: s.alerts,
       }),
     },
   ),
