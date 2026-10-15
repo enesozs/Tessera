@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from tessera import dcf, markets, options, valuation
+from tessera import curves, dcf, fixed_income, markets, options, valuation
 from tessera.errors import (
     ConfigurationError,
     NotApplicableError,
@@ -180,6 +180,18 @@ def curve(
     region: Literal["US", "EA"] = "US", issuers: Literal["AAA", "ALL"] = "AAA"
 ) -> Envelope[rates.YieldCurve]:
     return rates.us_curve() if region == "US" else rates.ea_curve(issuers)
+
+
+@app.get("/api/rates/curve-analytics")
+def curve_analytics(
+    region: Literal["US", "EA"] = "US", issuers: Literal["AAA", "ALL"] = "AAA"
+) -> Envelope[curves.CurveAnalytics]:
+    return fixed_income.curve_analytics(region, issuers)
+
+
+@app.post("/api/bonds/analyze")
+def analyze_bond(request: fixed_income.BondRequest) -> Envelope[fixed_income.BondAnalysis]:
+    return fixed_income.analyze(request)
 
 
 @app.get("/api/rates/sovereign")

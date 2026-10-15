@@ -15,6 +15,7 @@ export type FunctionCode =
   | 'MOST'
   | 'OMON'
   | 'IVOL'
+  | 'BOND'
   | 'WEI'
   | 'CMDTY'
   | 'WL'
@@ -214,6 +215,16 @@ export const FUNCTIONS: FunctionSpec[] = [
     summary: 'U.S. Treasury or euro-area government curve vs 1W/1M/1Y ago, with key spreads.',
     syntax: 'YC [US|EA] [ALL]',
     examples: ['YC US', 'YC EA', 'YC EA ALL'],
+  },
+  {
+    code: 'BOND',
+    title: 'Bond calculator',
+    category: 'Rates & FX',
+    security: false,
+    summary:
+      'Price ↔ yield on real dates, accrued interest, durations, convexity, DV01, G- and Z-spread to the curve, shock P&L.',
+    syntax: 'BOND [<COUPON%> <YYYY-MM-DD>] [P <PRICE> | Y <YIELD%>]',
+    examples: ['BOND', 'BOND 4.25 2036-08-15 P 95.5', 'BOND 5.5 2031-03-15 Y 6.1'],
   },
   {
     code: 'SOV',

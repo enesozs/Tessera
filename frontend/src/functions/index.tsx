@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { Bond } from './Bond'
 import { Comp } from './Comp'
 import { Dcf } from './Dcf'
 import { Des } from './Des'
@@ -36,6 +37,7 @@ export const COMPONENTS: Record<FunctionCode, ComponentType<FnProps>> = {
   MOST: Most,
   OMON: Omon,
   IVOL: Ivol,
+  BOND: Bond,
   WEI: (p) => <Monitor {...p} id="WEI" />,
   CMDTY: (p) => <Monitor {...p} id="CMDTY" />,
   WL: Watchlist,

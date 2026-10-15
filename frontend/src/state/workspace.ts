@@ -70,6 +70,7 @@ export function defaultWorkspaces(): Workspace[] {
       pane('YC', { params: { region: 'EA' } }),
       pane('SOV'),
       pane('ECO'),
+      pane('BOND'),
     ]),
     workspace('Watchlist', [
       pane('WL', { link: 'lime', security: 'NVDA' }),

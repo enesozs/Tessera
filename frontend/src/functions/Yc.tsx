@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { useMemo } from 'react'
-import { useCurve } from '@/api/client'
+import { useCurve, useCurveAnalytics } from '@/api/client'
 import type { YieldCurve } from '@/api/types'
 import { AXIS, EChart, TOOLTIP, type EChartsOption } from '@/charts/EChart'
 import { LineChart } from '@/charts/LineChart'
@@ -69,6 +69,11 @@ export function Yc({ pane }: FnProps) {
             value={view}
             options={[
               { value: 'curve', label: 'Curve' },
+              {
+                value: 'zero',
+                label: 'Zero & fwd',
+                hint: 'Bootstrapped zero (spot) and 1-year forward rates',
+              },
               { value: 'history', label: '1Y history' },
             ]}
             onChange={(v) => setParams(pane.id, { view: v })}
@@ -76,7 +81,15 @@ export function Yc({ pane }: FnProps) {
         </Toolbar>
       }
     >
-      {(c) => (view === 'history' ? <History c={c} /> : <Curve c={c} />)}
+      {(c) =>
+        view === 'history' ? (
+          <History c={c} />
+        ) : view === 'zero' ? (
+          <ZeroForward region={region} issuers={issuers} />
+        ) : (
+          <Curve c={c} />
+        )
+      }
     </FnFrame>
   )
 }
@@ -230,4 +243,97 @@ function History({ c }: { c: YieldCurve }) {
     [c],
   )
   return <LineChart lines={lines} format={pctFormat} />
+}
+
+const KEY_TENORS = [1, 2, 3, 5, 7, 10, 20, 30]
+
+function ZeroForward({ region, issuers }: { region: 'US' | 'EA'; issuers: 'AAA' | 'ALL' }) {
+  const query = useCurveAnalytics(region, issuers)
+  const a = query.data?.data
+  const option = useMemo<EChartsOption | null>(() => {
+    if (!a) return null
+    const line = (name: string, values: (number | null)[], color: string, dashed = false) => ({
+      name,
+      type: 'line',
+      showSymbol: false,
+      connectNulls: false,
+      lineStyle: { color, width: name === 'Par' ? 2 : 1.5, type: dashed ? 'dashed' : 'solid' },
+      itemStyle: { color },
+      data: a.years.map((t, i) => [t, values[i]]),
+    })
+    return {
+      animation: false,
+      grid: { left: 44, right: 14, top: 28, bottom: 26 },
+      tooltip: {
+        ...TOOLTIP,
+        valueFormatter: (v: number | null) => (isNum(v) ? `${v.toFixed(3)}%` : '—'),
+      },
+      legend: {
+        top: 4,
+        left: 8,
+        itemWidth: 12,
+        itemHeight: 2,
+        textStyle: { color: '#a3acb7', fontSize: 10.5 },
+      },
+      xAxis: {
+        type: 'value',
+        name: 'years',
+        nameTextStyle: { color: '#6b7581', fontSize: 9.5 },
+        ...AXIS,
+        splitLine: { show: false },
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+        ...AXIS,
+        axisLabel: { ...AXIS.axisLabel, formatter: (v: number) => v.toFixed(2) },
+      },
+      series: [
+        line('Par', a.par, '#ffb020'),
+        line('Zero (cont.)', a.zero, '#5aa9ff'),
+        line('1Y forward', a.forward_1y, '#a78bfa', true),
+      ],
+    }
+  }, [a])
+  if (!a || !option)
+    return <div className="p-3 text-fg-3">{query.isError ? String(query.error) : 'Loading…'}</div>
+  return (
+    <div className="flex h-full min-h-0 flex-col @container">
+      <div className="flex min-h-0 flex-1 flex-col @3xl:flex-row">
+        <div className="min-h-[180px] flex-[3]">
+          <EChart option={option} />
+        </div>
+        <div className="pane-scroll flex-[2] border-t border-line @3xl:border-t-0 @3xl:border-l">
+          <table className="dt num">
+            <thead>
+              <tr>
+                <th>Tenor</th>
+                <th>Par %</th>
+                <th>Zero %</th>
+                <th title="Rate for one year starting at this tenor">1Y fwd %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {KEY_TENORS.map((t) => {
+                const i = a.years.indexOf(t)
+                return i < 0 ? null : (
+                  <tr key={t}>
+                    <td className="text-fg-2">{t}Y</td>
+                    <td className="text-fg">{fmtFixed(a.par[i], 3)}</td>
+                    <td className="text-fg">{fmtFixed(a.zero[i], 3)}</td>
+                    <td className="text-fg-2">{fmtFixed(a.forward_1y[i], 3)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          <p className="px-2 py-2 text-[10.5px] leading-snug text-fg-3">
+            {a.method}. A forward is roughly z(t) + t·z′(t), so it amplifies every bend in the zero
+            curve: when long par yields flatten or invert (U.S. 20Y above 30Y), forwards rise above
+            the curve and then fall below it.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
 }

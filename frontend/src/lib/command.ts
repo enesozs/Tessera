@@ -95,6 +95,18 @@ export function parseArgs(fn: FunctionCode, args: string[]): ArgResult {
       params.peers = args.slice(0, 12).join(',')
       return { params }
     }
+    case 'BOND': {
+      for (let i = 0; i < args.length; i++) {
+        const a = args[i]
+        if (/^\d{4}-\d{2}-\d{2}$/.test(a)) params.maturity = a
+        else if ((a === 'P' || a === 'Y') && /^\d+(\.\d+)?$/.test(args[i + 1] ?? '')) {
+          params.quote = a === 'P' ? 'price' : 'yield'
+          params.value = args[++i]
+        } else if (/^\d+(\.\d+)?%?$/.test(a)) params.coupon = a.replace('%', '')
+        else return unknown(a)
+      }
+      return { params }
+    }
     case 'OMON':
       if (args.length > 1) return unknown(args[1])
       if (args.length && !/^\d{4}-\d{2}-\d{2}$/.test(args[0])) return unknown(args[0])

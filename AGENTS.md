@@ -26,8 +26,9 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
 
 ## 2. Current state (2026-10-15)
 
-**MVP complete; roadmap phases 1 (equity depth) and 2 (options) complete.** 21 functions:
-`DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON IVOL WEI CMDTY MOST WL FX YC SOV ECO HELP`.
+**MVP complete; roadmap phases 1 (equity depth), 2 (options) and 3 (fixed income) complete.**
+22 functions: `DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON IVOL WEI CMDTY MOST WL FX YC SOV
+BOND ECO HELP`.
 
 - Phase 1 added: `DCF` (pure model in `tessera/dcf.py`, inputs/defaults with stated sources in
   `tessera/valuation.py`; refuses banks/insurers with a reason, HTTP 422), `COMP` (Yahoo industry
@@ -40,6 +41,13 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
   `rates.risk_free_rate(t)` (Treasury par curve → continuous). derivlab is an editable install
   from `../05-derivatives-pricing-lab/backend` (see Makefile); restart `make dev` after
   installing it, the reloader does not pick up new packages.
+- Phase 3 added: `BOND` (`tessera/bonds.py`: date-based schedules rolled back from maturity,
+  ACT/ACT ICMA and 30/360, accrued, street-convention yield, Macaulay/modified duration,
+  convexity, DV01, Z-spread — all cross-checked against QuantLib in `tests/test_bonds.py`;
+  ACT/365F and ACT/360 deliberately unsupported) and `tessera/curves.py` (par → zero → 1Y
+  forward; U.S. par yields bootstrapped on a half-year grid, ECB spot rates used directly;
+  monotone cubic (PCHIP) interpolation so forwards have no jumps). `YC` gains a Zero & fwd
+  view; `BOND` reports G-spread and Z-spread to those curves.
 - Shell: workspace tabs (6 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
   Valuation · RACE, Options · SPY — the last two added by persisted-state migrations,
   versions 2 and 3), 1–6 tiled
@@ -48,8 +56,8 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 47 backend (pytest, offline — includes a hand-computed DCF and a synthetic Heston
-  chain through cleaning → SVI), 7 frontend (vitest, command
+- Tests: 71 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
+  cleaning → SVI, bonds vs QuantLib), 7 frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
   round-trip (`make e2e`).
 
@@ -111,8 +119,8 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
 ## 6. Roadmap (proposed — owner decides the order)
 
 1. ~~**Equity depth:** `DCF`, `COMP`, `GP` compare, `DVD`, `ERN`, `MOST`~~ — done.
-2. **Fixed income:** `BOND` calculator (price ↔ yield, accrued, duration, convexity, DV01),
-   bootstrapped spot/forward curves from par yields, curve shock P&L.
+2. ~~**Fixed income:** `BOND`, bootstrapped zero/forward curves, shock P&L~~ — done. Next:
+   callable bonds / yield-to-worst, key-rate durations, inflation-linked bonds.
 3. ~~**Options:** `OMON`, `IVOL` via project 05's `derivlab`~~ — done. Next: strategy payoff
    builder on live chain prices, IV history per ticker (needs our own storage).
 4. **Portfolio:** `PORT` holdings import, exposures, correlation, VaR/ES, stress (reuse project 03 ideas).

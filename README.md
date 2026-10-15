@@ -47,7 +47,8 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 | `CMDTY` | Energy, metals and agriculture futures | `CMDTY` |
 | `WL` | Your watchlist (stored in the browser) | `WL ADD ASML` |
 | `FX` | ECB reference cross-rate matrix and pair history | `FX EURUSD` |
-| `YC` | US Treasury / euro-area curves vs 1W/1M/1Y ago, key spreads | `YC EA ALL` |
+| `YC` | US Treasury / euro-area curves vs 1W/1M/1Y ago, key spreads; bootstrapped zero & 1Y forward curves | `YC EA ALL` |
+| `BOND` | Bond calculator on real dates: price ↔ yield, accrued, durations, convexity, DV01, G/Z-spread, shocks | `BOND 4.25 2036-08-15 P 95.5` |
 | `SOV` | Euro-area 10-year yields and spreads to the Bund | `SOV IT GR` |
 | `ECO` | US & euro-area macro dashboard, or any FRED series | `ECO GDPC1` |
 | `HELP` | Directory, grammar and keyboard shortcuts | `HELP` |

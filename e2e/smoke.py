@@ -5,6 +5,7 @@ running (`make dev`) and Google Chrome installed. Run with `make e2e`.
 Usage: python e2e/smoke.py [base_url] [screenshot_dir]
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -98,6 +99,7 @@ def main() -> int:
             "MSFT DCF",
             "AAPL OMON",
             "AAPL IVOL",
+            "BOND 4.25 2036-08-15 P 95.5",
             "HELP",
         ]:
             command(page, cmd)
@@ -106,6 +108,15 @@ def main() -> int:
         command(page, "ECO US.CPI")
         settle(page)
         shot(page, "fn-eco-series")
+
+        # BOND: switching the quote to yield keeps the analysis consistent; YC shows zero curves.
+        command(page, "BOND 4.25 2036-08-15 P 95.5")
+        settle(page)
+        page.get_by_role("button", name="Yield", exact=True).click()
+        expect(page.get_by_label("Yield to maturity")).to_have_value(re.compile(r"^4\.8\d+$"))
+        command(page, "YC US")
+        page.get_by_role("button", name="Zero & fwd").click()
+        settle(page)
 
         # OMON: switching to the Greeks view shows delta columns.
         command(page, "SPY OMON")

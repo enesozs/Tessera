@@ -1,6 +1,9 @@
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
 import type {
+  BondAnalysis,
+  BondRequest,
   Comps,
+  CurveAnalytics,
   DcfAssumptions,
   DcfInputs,
   DcfResult,
@@ -287,6 +290,23 @@ export const useVolSurface = (symbol: string | undefined) =>
     queryFn: () => get<Envelope<VolSurfaceView>>('/options/surface', { symbol }),
     enabled: !!symbol,
     staleTime: 10 * MIN,
+  })
+
+export const useCurveAnalytics = (region: 'US' | 'EA', issuers: 'AAA' | 'ALL', enabled = true) =>
+  useQuery({
+    queryKey: ['curve-analytics', region, issuers],
+    queryFn: () => get<Envelope<CurveAnalytics>>('/rates/curve-analytics', { region, issuers }),
+    enabled,
+    staleTime: 30 * MIN,
+  })
+
+export const useBond = (request: BondRequest | null) =>
+  useQuery({
+    queryKey: ['bond', request],
+    queryFn: () => post<Envelope<BondAnalysis>>('/bonds/analyze', request),
+    enabled: !!request,
+    staleTime: 30 * MIN,
+    placeholderData: keepPreviousData,
   })
 
 export const fetchSearch = (q: string) => get<Envelope<SecurityHit[]>>('/search', { q })

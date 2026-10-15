@@ -54,6 +54,14 @@ describe('parseCommand', () => {
       params: { expiry: '2026-12-18' },
     })
     expect(parseCommand('SPY OMON DEC')).toMatchObject({ kind: 'error' })
+    expect(parseCommand('bond 4.25 2036-08-15 p 95.5')).toMatchObject({
+      fn: 'BOND',
+      params: { coupon: '4.25', maturity: '2036-08-15', quote: 'price', value: '95.5' },
+    })
+    expect(parseCommand('BOND 5% Y 6.1')).toMatchObject({
+      params: { coupon: '5', quote: 'yield', value: '6.1' },
+    })
+    expect(parseCommand('BOND P')).toMatchObject({ kind: 'error' })
   })
 
   it('turns watchlist verbs into actions', () => {

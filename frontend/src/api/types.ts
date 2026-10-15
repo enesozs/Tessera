@@ -506,3 +506,60 @@ export interface VolSurfaceView {
   realized_vol_30d: number | null
   realized_vol_90d: number | null
 }
+
+// ── Fixed income ──────────────────────────────────────────────────────────────
+
+export interface CurveAnalytics {
+  years: number[]
+  par: number[]
+  zero: number[]
+  forward_1y: (number | null)[]
+  method: string
+}
+
+export type DayCount = 'ACT/ACT' | '30/360'
+
+export interface BondRequest {
+  coupon: number
+  maturity: string
+  frequency: 1 | 2 | 4 | 12
+  day_count: DayCount
+  quote: 'price' | 'yield'
+  value: number
+  curve: 'US' | 'EA'
+}
+
+export interface BondAnalysis {
+  settlement: string
+  previous_coupon: string
+  next_coupon: string
+  days_accrued: number
+  accrued: number
+  clean: number
+  dirty: number
+  ytm: number
+  current_yield: number | null
+  risk: { macaulay: number; modified: number; convexity: number; dv01: number }
+  cash_flows: {
+    date: string
+    coupon: number
+    principal: number
+    t: number
+    present_value: number
+  }[]
+  shocks: {
+    bp: number
+    clean: number
+    change: number
+    duration_estimate: number
+    duration_convexity_estimate: number
+  }[]
+  price_yield: [number, number][]
+  benchmark: {
+    curve: string
+    years: number
+    par_yield: number | null
+    g_spread_bp: number | null
+    z_spread_bp: number | null
+  }
+}
