@@ -396,7 +396,8 @@ export const useWorkspace = create<State>()(
             const spec = BY_CODE[command.fn]
             const security =
               command.security ?? (spec.security ? inheritedSecurity(ws, target) : target.security)
-            if (spec.security && !security && command.fn !== 'NEWS')
+            // NEWS and ASK work with or without a security.
+            if (spec.security && !security && command.fn !== 'NEWS' && command.fn !== 'ASK')
               return `${command.fn} needs a security — e.g. RACE ${command.fn}`
             next = { ...target, fn: command.fn, security, params: command.params }
             const action = command.action

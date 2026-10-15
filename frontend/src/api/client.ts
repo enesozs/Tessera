@@ -1,5 +1,6 @@
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import type {
+  AskAnswer,
   BondAnalysis,
   BondRequest,
   Comps,
@@ -336,6 +337,13 @@ export const useScreenFields = () =>
     queryKey: ['screen-fields'],
     queryFn: () => get<ScreenField[]>('/screen/fields'),
     staleTime: Infinity,
+  })
+
+/** ASK costs real API usage, so it is an explicit action (mutation), never a cached query. */
+export const useAsk = () =>
+  useMutation({
+    mutationFn: (body: { question: string; security?: string }) =>
+      post<Envelope<AskAnswer>>('/ask', body),
   })
 
 export const fetchSearch = (q: string) => get<Envelope<SecurityHit[]>>('/search', { q })

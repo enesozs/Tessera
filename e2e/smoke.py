@@ -15,7 +15,11 @@ BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5180"
 SHOTS = Path(sys.argv[2]) if len(sys.argv) > 2 else None
 
 # Expected errors: SEC answers 503 without SEC_USER_AGENT; a bank's DCF is refused with 422.
-ALLOWED = ("/api/securities/filings", "/api/valuation/dcf/inputs?symbol=ISP.MI")
+ALLOWED = (
+    "/api/securities/filings",
+    "/api/valuation/dcf/inputs?symbol=ISP.MI",
+    "/api/ask",
+)
 
 
 def shot(page: Page, name: str) -> None:
@@ -157,6 +161,20 @@ def main() -> int:
             page.get_by_role("navigation", name="Workspaces").get_by_text("Shared test")
         ).to_be_visible()
         settle(page)
+
+        # ASK from the command line is sent exactly once (it costs money), and either answers
+        # or explains that no Anthropic key is configured.
+        asks: list[str] = []
+        page.on(
+            "request",
+            lambda r: asks.append(r.url) if r.url.endswith("/api/ask") else None,
+        )
+        command(page, "RACE ASK How has Ferrari's share price done this year?")
+        expect(
+            page.get_by_text("How this was answered").or_(page.get_by_text("Not configured"))
+        ).to_be_visible(timeout=120_000)
+        page.wait_for_timeout(500)
+        assert len(asks) == 1, f"ASK sent {len(asks)} requests"
 
         # PORT: editing the holdings re-runs the analysis on the new portfolio.
         command(page, "PORT RISK")

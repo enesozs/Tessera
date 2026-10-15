@@ -26,9 +26,9 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
 
 ## 2. Current state (2026-10-15)
 
-**MVP complete; roadmap phases 1–5 complete** (equity depth, options, fixed income, portfolio,
-screening & terminal experience). 25 functions: `DES GP HP FA NEWS FIL DVD ERN DCF COMP OMON
-IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO HELP`.
+**MVP complete; roadmap phases 1–7 complete** (equity depth, options, fixed income, portfolio,
+screening & terminal experience, platform, AI). 26 functions: `DES GP HP FA NEWS FIL DVD ERN
+DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
 
 - Phase 1 added: `DCF` (pure model in `tessera/dcf.py`, inputs/defaults with stated sources in
   `tessera/valuation.py`; refuses banks/insurers with a reason, HTTP 422), `COMP` (Yahoo industry
@@ -71,6 +71,16 @@ IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO HELP`.
   whitelists the three source trees) and GitHub Actions CI. The image itself has not been built
   on this machine yet (Docker Desktop was not running); a clean non-editable install with the
   same command was verified instead.
+- Phase 7 added: `ASK` (`tessera/assistant.py`): a manual Claude tool-use loop (Anthropic
+  Python SDK 1.x, `client.beta.messages.create`, model `TESSERA_ASK_MODEL` default
+  claude-opus-5-5, effort medium, adaptive thinking by default, server-side refusal fallback
+  `fallbacks="default"` + beta `server-side-fallback-2026-07-01`, cached system+tools prefix,
+  strict tool schemas, parallel tool execution with all results in one user message, step cap
+  with a mid-conversation system message forcing a final answer). Twelve tools wrap the same
+  providers as the functions; each result carries source/as-of and the answer must cite them.
+  The UI shows the tool trace with "Open" to check each figure in its function. Missing
+  credentials → 503 with instructions (SDK 1.x raises TypeError lazily on the first request).
+  Tested with a scripted fake client only — no live API call was made (no key on this machine).
 - Shell: workspace tabs (7 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
   Valuation · RACE, Options · SPY, Portfolio — the last three added by persisted-state
   migrations, versions 2–4), 1–6 tiled
@@ -79,7 +89,7 @@ IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO HELP`.
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 100 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
+- Tests: 105 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
   cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn, the query parser), 14
   frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
@@ -153,7 +163,8 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
    Next: saved screens, alerts on macro releases and portfolio drift.
 6. ~~**Platform:** Docker, CI, hardening~~ — done. Next: push to GitHub, deploy (one container
    on a small VM/Render/Fly, or static UI + API), Postgres/DuckDB for point-in-time history.
-7. **AI:** `ASK` — Claude with typed tools over the terminal's own endpoints, cited answers.
+7. ~~**AI:** `ASK`~~ — done. Next: run it against a real key and build a small eval set of
+   questions with checkable answers before tuning prompts or effort.
 
 Known limitations: Yahoo is unofficial and may change or rate-limit; statements are not
 point-in-time; sovereign yields are monthly; market clocks ignore holidays.

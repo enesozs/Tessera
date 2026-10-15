@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Tessera — a keyboard-first financial terminal built on free public data"
 requires-python = ">=3.12,<3.14"
 dependencies = [
+    "anthropic>=1.14",  # ASK (needs ANTHROPIC_API_KEY at runtime)
     "fastapi[standard]>=0.143",
     "httpx>=0.28",
     "pandas>=2.2",

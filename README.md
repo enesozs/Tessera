@@ -18,7 +18,7 @@ presented as real time, and nothing is fabricated.
 
 ```bash
 make install        # Python venv + npm packages
-cp .env.example .env   # optional: set SEC_USER_AGENT to enable SEC filings (FIL)
+cp .env.example .env   # optional: SEC_USER_AGENT (FIL), ANTHROPIC_API_KEY (ASK)
 make dev            # API on :8010, UI on http://localhost:5180
 ```
 
@@ -54,6 +54,7 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 | `BOND` | Bond calculator on real dates: price ↔ yield, accrued, durations, convexity, DV01, G/Z-spread, shocks | `BOND 4.25 2036-08-15 P 95.5` |
 | `SOV` | Euro-area 10-year yields and spreads to the Bund | `SOV IT GR` |
 | `ECO` | US & euro-area macro dashboard, or any FRED series | `ECO GDPC1` |
+| `ASK` | AI research assistant: answers with Tessera's own data and cites every figure (needs `ANTHROPIC_API_KEY`) | `RACE ASK Is Ferrari expensive?` |
 | `HELP` | Directory, grammar and keyboard shortcuts | `HELP` |
 
 **Grammar:** `<TICKER>`, `<FUNCTION> [ARGS]`, or `<TICKER> <FUNCTION> [ARGS]`. Enter runs in

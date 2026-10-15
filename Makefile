@@ -54,4 +54,4 @@ docker:             ## Build the single-container image (context: the QuantProje
 	docker build -f Dockerfile -t tessera:latest ..
 
 docker-run:         ## Run the image on http://localhost:8010 (cache in a named volume)
-	docker run --rm -p 8010:8010 -v tessera-data:/data $(if $(SEC_USER_AGENT),-e SEC_USER_AGENT="$(SEC_USER_AGENT)") tessera:latest
+	docker run --rm -p 8010:8010 -v tessera-data:/data $(if $(SEC_USER_AGENT),-e SEC_USER_AGENT="$(SEC_USER_AGENT)") $(if $(ANTHROPIC_API_KEY),-e ANTHROPIC_API_KEY) tessera:latest

@@ -77,6 +77,17 @@ describe('parseCommand', () => {
     })
   })
 
+  it('keeps ASK questions in their original case', () => {
+    expect(parseCommand('RACE ask Is Ferrari expensive?')).toEqual({
+      kind: 'function',
+      fn: 'ASK',
+      security: 'RACE',
+      params: { q: 'Is Ferrari expensive?' },
+    })
+    expect(parseCommand('ASK')).toMatchObject({ fn: 'ASK', params: {} })
+    expect(parseCommand('task')).toEqual({ kind: 'security', security: 'TASK' }) // a ticker, not ASK
+  })
+
   it('parses alert commands', () => {
     expect(parseCommand('alrt add aapl > 350.5')).toMatchObject({
       fn: 'ALRT',

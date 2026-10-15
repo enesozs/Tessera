@@ -668,3 +668,26 @@ export interface ScreenField {
   kind: 'category' | 'money' | 'percent' | 'number'
   group: string
 }
+
+// ── ASK ───────────────────────────────────────────────────────────────────────
+
+export interface AskToolCall {
+  tool: string
+  input: Record<string, unknown>
+  ok: boolean
+  source: string | null
+  as_of: string | null
+  error: string | null
+}
+
+export interface AskAnswer {
+  question: string
+  answer: string
+  model: string
+  steps: number
+  stop_reason: string
+  tool_calls: AskToolCall[]
+  input_tokens: number
+  output_tokens: number
+  cache_read_tokens: number
+}

@@ -36,6 +36,15 @@ export function tokenize(input: string): string[] {
 export function parseCommand(input: string): Command {
   const tokens = tokenize(input)
   if (tokens.length === 0) return { kind: 'empty' }
+  // ASK keeps the question's original case: [TICKER] ASK <free text>.
+  const ask = /^\s*(?:([\w.\-=^]+)\s+)?ask(?:\s+([\s\S]*))?$/i.exec(input)
+  if (ask) {
+    const security = ask[1]?.toUpperCase()
+    if (security && !isTicker(security))
+      return { kind: 'error', message: `"${ask[1]}" is not a valid ticker` }
+    const question = (ask[2] ?? '').trim()
+    return { kind: 'function', fn: 'ASK', security, params: question ? { q: question } : {} }
+  }
   // The blueprint's query language works straight from the command line.
   if (tokens[0] === 'FIND') return withArgs('EQS', tokens)
   const [first, second, ...rest] = tokens

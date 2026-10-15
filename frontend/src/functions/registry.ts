@@ -19,6 +19,7 @@ export type FunctionCode =
   | 'PORT'
   | 'EQS'
   | 'ALRT'
+  | 'ASK'
   | 'WEI'
   | 'CMDTY'
   | 'WL'
@@ -288,6 +289,19 @@ export const FUNCTIONS: FunctionSpec[] = [
     summary: 'US & euro-area macro dashboard; open any tile, or any FRED series by id.',
     syntax: 'ECO [<SERIES>]',
     examples: ['ECO', 'ECO US.CPI', 'ECO GDPC1'],
+  },
+  {
+    code: 'ASK',
+    title: 'Ask (AI research assistant)',
+    category: 'Terminal',
+    security: true,
+    summary:
+      'Ask a question in plain language; Claude answers using Tessera’s own data functions and cites every figure. Needs ANTHROPIC_API_KEY.',
+    syntax: '[<TICKER>] ASK <question>',
+    examples: [
+      'ASK How steep is the US curve vs a year ago?',
+      'RACE ASK Is Ferrari expensive versus its history?',
+    ],
   },
   {
     code: 'HELP',

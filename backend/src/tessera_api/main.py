@@ -17,9 +17,10 @@ from fastapi import FastAPI, Query, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from tessera import (
+    assistant,
     curves,
     dcf,
     fixed_income,
@@ -230,6 +231,19 @@ def option_surface(symbol: Symbol) -> Envelope[option_models.VolSurfaceView]:
 @app.post("/api/portfolio/analyze")
 def analyze_portfolio(request: portfolio.PortfolioRequest) -> Envelope[portfolio.PortfolioAnalysis]:
     return portfolio.analyse(request)
+
+
+# ── ASK ───────────────────────────────────────────────────────────────────────
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=2000)
+    security: str | None = Field(None, max_length=24, pattern=r"^[\w.\-=^]+$")
+
+
+@app.post("/api/ask")
+def ask(request: AskRequest) -> Envelope[assistant.Answer]:
+    return assistant.ask(request.question.strip(), request.security)
 
 
 # ── Markets ───────────────────────────────────────────────────────────────────

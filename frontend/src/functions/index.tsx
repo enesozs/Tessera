@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { Alrt } from './Alrt'
+import { Ask } from './Ask'
 import { Bond } from './Bond'
 import { Comp } from './Comp'
 import { Dcf } from './Dcf'
@@ -44,6 +45,7 @@ export const COMPONENTS: Record<FunctionCode, ComponentType<FnProps>> = {
   PORT: Port,
   EQS: Eqs,
   ALRT: Alrt,
+  ASK: Ask,
   WEI: (p) => <Monitor {...p} id="WEI" />,
   CMDTY: (p) => <Monitor {...p} id="CMDTY" />,
   WL: Watchlist,
