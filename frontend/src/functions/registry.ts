@@ -8,6 +8,11 @@ export type FunctionCode =
   | 'FA'
   | 'NEWS'
   | 'FIL'
+  | 'DCF'
+  | 'COMP'
+  | 'ERN'
+  | 'DVD'
+  | 'MOST'
   | 'WEI'
   | 'CMDTY'
   | 'WL'
@@ -17,7 +22,7 @@ export type FunctionCode =
   | 'ECO'
   | 'HELP'
 
-export type Category = 'Security' | 'Markets' | 'Rates & FX' | 'Macro' | 'Terminal'
+export type Category = 'Security' | 'Valuation' | 'Markets' | 'Rates & FX' | 'Macro' | 'Terminal'
 
 export interface FunctionSpec {
   code: FunctionCode
@@ -47,9 +52,10 @@ export const FUNCTIONS: FunctionSpec[] = [
     title: 'Price chart',
     category: 'Security',
     security: true,
-    summary: 'Interactive candlestick / line chart with volume, moving averages and log scale.',
-    syntax: '<TICKER> GP',
-    examples: ['RACE GP', '^GSPC GP', 'BTC-USD GP'],
+    summary:
+      'Interactive candlestick / line chart with volume, moving averages and log scale. Add VS tickers to compare % performance.',
+    syntax: '<TICKER> GP [RANGE] [VS <TICKER> …]',
+    examples: ['RACE GP', '^GSPC GP 5Y', 'RACE GP VS STLA ^GSPC'],
   },
   {
     code: 'HP',
@@ -88,6 +94,46 @@ export const FUNCTIONS: FunctionSpec[] = [
     examples: ['AAPL FIL', 'RACE FIL'],
   },
   {
+    code: 'DVD',
+    title: 'Dividends & splits',
+    category: 'Security',
+    security: true,
+    summary:
+      'Dividend history, annual totals and growth, trailing yield, upcoming dates and splits.',
+    syntax: '<TICKER> DVD',
+    examples: ['AAPL DVD', 'ISP.MI DVD'],
+  },
+  {
+    code: 'ERN',
+    title: 'Earnings & estimates',
+    category: 'Security',
+    security: true,
+    summary:
+      'Next report date, EPS surprises vs consensus, revenue/EPS estimates and their revisions.',
+    syntax: '<TICKER> ERN',
+    examples: ['RACE ERN', 'NVDA ERN'],
+  },
+  {
+    code: 'DCF',
+    title: 'Discounted cash flow',
+    category: 'Valuation',
+    security: true,
+    summary:
+      'FCFF valuation from reported financials with sourced, editable assumptions, EV bridge and WACC × growth sensitivity.',
+    syntax: '<TICKER> DCF',
+    examples: ['RACE DCF', 'MSFT DCF'],
+  },
+  {
+    code: 'COMP',
+    title: 'Peer comparison',
+    category: 'Valuation',
+    security: true,
+    summary:
+      'Multiples, margins and growth against industry peers (or your own list), with peer medians.',
+    syntax: '<TICKER> COMP [<PEER> …]',
+    examples: ['RACE COMP', 'RACE COMP P911.DE STLA TM MBG.DE'],
+  },
+  {
     code: 'WEI',
     title: 'World equity indices',
     category: 'Markets',
@@ -107,6 +153,16 @@ export const FUNCTIONS: FunctionSpec[] = [
     summary: 'Front-month futures across energy, metals and agriculture.',
     syntax: 'CMDTY',
     examples: ['CMDTY'],
+  },
+  {
+    code: 'MOST',
+    title: 'Market movers',
+    category: 'Markets',
+    security: false,
+    source: true,
+    summary: 'Top U.S. gainers, losers and most active stocks today, with relative volume.',
+    syntax: 'MOST [GAINERS|LOSERS|ACTIVES]',
+    examples: ['MOST', 'MOST LOSERS'],
   },
   {
     code: 'WL',

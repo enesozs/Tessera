@@ -12,3 +12,7 @@ class UpstreamError(TesseraError):
 
 class ConfigurationError(TesseraError):
     """A provider needs configuration (e.g. a contact User-Agent) that is missing."""
+
+
+class NotApplicableError(TesseraError):
+    """The request is valid but the method does not apply (e.g. an FCFF DCF for a bank)."""

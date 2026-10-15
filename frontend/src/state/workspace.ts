@@ -76,7 +76,22 @@ export function defaultWorkspaces(): Workspace[] {
       pane('GP', { link: 'lime', security: 'NVDA', params: { range: '1Y' } }),
       pane('CMDTY', { link: 'lime' }),
     ]),
+    valuationWorkspace(),
   ]
+}
+
+/** Added in layout version 2: the equity valuation workflow. */
+function valuationWorkspace(): Workspace {
+  return workspace('Valuation · RACE', [
+    pane('DCF', { link: 'rose', security: 'RACE' }),
+    pane('COMP', { link: 'rose', security: 'RACE' }),
+    pane('GP', {
+      link: 'rose',
+      security: 'RACE',
+      params: { range: '5Y', cmp: 'FTSEMIB.MI,^GSPC' },
+    }),
+    pane('ERN', { link: 'rose', security: 'RACE' }),
+  ])
 }
 
 const DEFAULT_WATCHLIST: WatchItem[] = [
@@ -338,7 +353,14 @@ export const useWorkspace = create<State>()(
     },
     {
       name: 'tessera.workspace',
-      version: 1,
+      version: 2,
+      // Saved layouts are kept on upgrade; new preset workspaces are appended.
+      migrate: (persisted, version) => {
+        const state = persisted as Draft
+        if (version < 2 && Array.isArray(state.workspaces))
+          state.workspaces.push(valuationWorkspace())
+        return state
+      },
       partialize: (s) => ({
         workspaces: s.workspaces,
         activeWorkspaceId: s.activeWorkspaceId,

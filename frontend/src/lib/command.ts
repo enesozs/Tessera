@@ -73,12 +73,40 @@ export function parseArgs(fn: FunctionCode, args: string[]): ArgResult {
   const unknown = (a: string) => ({ error: `${fn}: unexpected argument "${a}"` })
 
   switch (fn) {
-    case 'GP':
-      for (const a of args) {
+    case 'GP': {
+      const vs = args.indexOf('VS')
+      const own = vs >= 0 ? args.slice(0, vs) : args
+      for (const a of own) {
         if (GP_RANGES.includes(a)) params.range = a
         else return unknown(a)
       }
+      if (vs >= 0) {
+        const others = args.slice(vs + 1)
+        const bad = others.find((a) => !isTicker(a))
+        if (bad) return { error: `GP: "${bad}" is not a valid ticker` }
+        if (!others.length) return { error: 'GP: add tickers after VS, e.g. RACE GP VS STLA' }
+        params.cmp = others.slice(0, 5).join(',')
+      }
       return { params }
+    }
+    case 'COMP': {
+      const bad = args.find((a) => !isTicker(a))
+      if (bad) return { error: `COMP: "${bad}" is not a valid ticker` }
+      params.peers = args.slice(0, 12).join(',')
+      return { params }
+    }
+    case 'MOST': {
+      if (args.length > 1) return unknown(args[1])
+      const kinds: Record<string, string> = {
+        GAINERS: 'gainers',
+        LOSERS: 'losers',
+        ACTIVES: 'actives',
+        ACTIVE: 'actives',
+      }
+      if (args.length && !(args[0] in kinds)) return unknown(args[0])
+      if (args.length) params.kind = kinds[args[0]]
+      return { params }
+    }
     case 'FA':
       for (const a of args) {
         if (a in STATEMENTS) params.statement = STATEMENTS[a]

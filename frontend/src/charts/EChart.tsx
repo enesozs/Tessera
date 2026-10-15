@@ -1,6 +1,6 @@
 // Thin ECharts wrapper (tree-shaken build) for charts whose x-axis is not time, e.g. tenors.
 
-import { LineChart as ELine, BarChart } from 'echarts/charts'
+import { LineChart as ELine, BarChart, ScatterChart } from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
@@ -14,6 +14,7 @@ import { useEffect, useRef } from 'react'
 echarts.use([
   ELine,
   BarChart,
+  ScatterChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,

@@ -1,6 +1,10 @@
-import { useMemo } from 'react'
-import { useHistory } from '@/api/client'
-import type { Span } from '@/api/types'
+import { useMemo, useState } from 'react'
+import { useHistories, useHistory } from '@/api/client'
+import type { History, Span } from '@/api/types'
+import { CompareChart, type CompareLine } from '@/charts/CompareChart'
+import { PALETTE } from '@/charts/lwc'
+import type { Time } from 'lightweight-charts'
+import { isTicker } from '@/lib/command'
 import { PriceChart, SMA_COLORS, type ChartStyle } from '@/charts/PriceChart'
 import { useWorkspace } from '@/state/workspace'
 import { FnFrame } from '@/ui/FnFrame'
@@ -47,7 +51,9 @@ export function Gp({ pane }: FnProps) {
     [p.sma],
   )
 
+  const compare = useMemo(() => (p.cmp ?? '').split(',').filter(Boolean), [p.cmp])
   const query = useHistory(pane.security, spanFor(range))
+  const others = useHistories(compare, spanFor(range))
   const history = query.data?.data
   const lastDate =
     history && typeof history.bars.at(-1)?.time === 'string'
@@ -60,6 +66,28 @@ export function Gp({ pane }: FnProps) {
       : [...averages, n].sort((a, b) => a - b)
     setParams(pane.id, { sma: next.join(',') })
   }
+
+  const comparing = compare.length > 0
+  const otherData = others.map((o) => o.data?.data)
+  const loaded = others.map((o) => `${o.data?.data.symbol}:${o.dataUpdatedAt}`).join(',')
+  const lines = useMemo<CompareLine[]>(() => {
+    if (!comparing || !history) return []
+    const toLine = (h: History, i: number): CompareLine => ({
+      symbol: h.symbol,
+      color: PALETTE[i % PALETTE.length],
+      // Raw UTC times: exchanges in different zones must share one time axis.
+      points: h.bars.map((b) => ({
+        time: b.time as Time,
+        value: adjusted && b.adj_close ? b.adj_close : b.close,
+      })),
+    })
+    return [history, ...otherData.filter((h): h is History => !!h)].map(toLine)
+    // otherData is a new array every render; `loaded` changes exactly when its contents do.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comparing, history, adjusted, loaded])
+  const failed = compare.filter((_, i) => others[i]?.isError)
+
+  const setCompare = (list: string[]) => setParams(pane.id, { cmp: list.slice(0, 5).join(',') })
 
   return (
     <FnFrame
@@ -77,25 +105,29 @@ export function Gp({ pane }: FnProps) {
             ]}
             onChange={(v) => setParams(pane.id, { style: v })}
           />
+          <CompareInput compare={compare} failed={failed} onChange={setCompare} />
           <Spacer />
-          {[20, 50, 200].map((n) => (
+          {!comparing &&
+            [20, 50, 200].map((n) => (
+              <Toggle
+                key={n}
+                on={averages.includes(n)}
+                onChange={() => toggleSma(n)}
+                color={SMA_COLORS[n]}
+                title={`${n}-period simple moving average`}
+              >
+                SMA{n}
+              </Toggle>
+            ))}
+          {!comparing && (
             <Toggle
-              key={n}
-              on={averages.includes(n)}
-              onChange={() => toggleSma(n)}
-              color={SMA_COLORS[n]}
-              title={`${n}-period simple moving average`}
+              on={log}
+              onChange={(v) => setParams(pane.id, { log: v ? '1' : '0' })}
+              title="Logarithmic price scale"
             >
-              SMA{n}
+              LOG
             </Toggle>
-          ))}
-          <Toggle
-            on={log}
-            onChange={(v) => setParams(pane.id, { log: v ? '1' : '0' })}
-            title="Logarithmic price scale"
-          >
-            LOG
-          </Toggle>
+          )}
           <Toggle
             on={adjusted}
             onChange={(v) => setParams(pane.id, { adj: v ? '1' : '0' })}
@@ -117,16 +149,81 @@ export function Gp({ pane }: FnProps) {
         )
       }
     >
-      {(h) => (
-        <PriceChart
-          history={h}
-          style={style}
-          log={log}
-          adjusted={adjusted}
-          averages={averages}
-          visibleFrom={visibleFrom(range, lastDate)}
+      {(h) =>
+        comparing ? (
+          <CompareChart
+            lines={lines}
+            intraday={h.span.startsWith('intraday')}
+            visibleFrom={visibleFrom(range, lastDate)}
+          />
+        ) : (
+          <PriceChart
+            history={h}
+            style={style}
+            log={log}
+            adjusted={adjusted}
+            averages={averages}
+            visibleFrom={visibleFrom(range, lastDate)}
+          />
+        )
+      }
+    </FnFrame>
+  )
+}
+
+function CompareInput({
+  compare,
+  failed,
+  onChange,
+}: {
+  compare: string[]
+  failed: string[]
+  onChange: (list: string[]) => void
+}) {
+  const [draft, setDraft] = useState('')
+  const add = () => {
+    const extra = draft
+      .toUpperCase()
+      .split(/[\s,]+/)
+      .filter(isTicker)
+    if (extra.length) onChange([...new Set([...compare, ...extra])])
+    setDraft('')
+  }
+  return (
+    <div className="flex items-center gap-1">
+      {compare.map((s, i) => (
+        <span
+          key={s}
+          className="flex h-[22px] items-center gap-1 rounded-[3px] border border-line px-1.5 text-[10.5px]"
+          title={failed.includes(s) ? 'No data for this ticker' : undefined}
+        >
+          <span
+            className="size-1.5 rounded-full"
+            style={{ background: PALETTE[(i + 1) % PALETTE.length] }}
+          />
+          <span className={failed.includes(s) ? 'num text-down line-through' : 'num text-fg-2'}>
+            {s}
+          </span>
+          <button
+            type="button"
+            onClick={() => onChange(compare.filter((c) => c !== s))}
+            className="text-fg-4 hover:text-down"
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      {compare.length < 5 && (
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && add()}
+          onBlur={add}
+          placeholder="+ VS"
+          aria-label="Compare with"
+          className="num h-[22px] w-16 rounded-[3px] border border-line bg-canvas px-1.5 text-[10.5px] text-fg uppercase placeholder:text-fg-4 focus:w-28 focus:border-amber-dim focus:outline-none"
         />
       )}
-    </FnFrame>
+    </div>
   )
 }

@@ -248,11 +248,13 @@ export function ErrorState({ error, hint }: { error: unknown; hint?: ReactNode }
   const title =
     api?.status === 404
       ? 'No data'
-      : api?.status === 503
-        ? 'Not configured'
-        : api?.status === 0
-          ? 'Offline'
-          : 'Provider error'
+      : api?.status === 422
+        ? 'Not applicable'
+        : api?.status === 503
+          ? 'Not configured'
+          : api?.status === 0
+            ? 'Offline'
+            : 'Provider error'
   return (
     <div className="flex h-full flex-col items-center justify-center gap-1.5 p-6 text-center">
       <div className="text-[11px] font-semibold tracking-[0.12em] text-down uppercase">{title}</div>

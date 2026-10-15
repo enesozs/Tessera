@@ -1,6 +1,10 @@
 import type { ComponentType } from 'react'
+import { Comp } from './Comp'
+import { Dcf } from './Dcf'
 import { Des } from './Des'
+import { Dvd } from './Dvd'
 import { Eco } from './Eco'
+import { Ern } from './Ern'
 import { Fa } from './Fa'
 import { Fil } from './Fil'
 import { Fx } from './Fx'
@@ -8,6 +12,7 @@ import { Gp } from './Gp'
 import { Help } from './Help'
 import { Hp } from './Hp'
 import { Monitor } from './Monitor'
+import { Most } from './Most'
 import { News } from './News'
 import type { FunctionCode } from './registry'
 import { Sov } from './Sov'
@@ -22,6 +27,11 @@ export const COMPONENTS: Record<FunctionCode, ComponentType<FnProps>> = {
   FA: Fa,
   NEWS: News,
   FIL: Fil,
+  DCF: Dcf,
+  COMP: Comp,
+  ERN: Ern,
+  DVD: Dvd,
+  MOST: Most,
   WEI: (p) => <Monitor {...p} id="WEI" />,
   CMDTY: (p) => <Monitor {...p} id="CMDTY" />,
   WL: Watchlist,

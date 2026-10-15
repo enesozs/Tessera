@@ -13,11 +13,18 @@ from typing import Annotated, Literal
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
-from tessera import markets
-from tessera.errors import ConfigurationError, NotFoundError, TesseraError, UpstreamError
+from tessera import dcf, markets, valuation
+from tessera.errors import (
+    ConfigurationError,
+    NotApplicableError,
+    NotFoundError,
+    TesseraError,
+    UpstreamError,
+)
 from tessera.models import Envelope
-from tessera.providers import fx, macro, rates, sec, yahoo
+from tessera.providers import fx, macro, rates, research, sec, yahoo
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -33,7 +40,12 @@ Currency = Annotated[str, Query(pattern=r"^[A-Z]{3}$")]
 
 @app.exception_handler(TesseraError)
 def handle_tessera_error(_: Request, exc: TesseraError) -> JSONResponse:
-    status = {NotFoundError: 404, ConfigurationError: 503, UpstreamError: 502}.get(type(exc), 500)
+    status = {
+        NotFoundError: 404,
+        NotApplicableError: 422,
+        ConfigurationError: 503,
+        UpstreamError: 502,
+    }.get(type(exc), 500)
     return JSONResponse(
         status_code=status, content={"detail": str(exc), "kind": type(exc).__name__}
     )
@@ -85,6 +97,45 @@ def news(
     return yahoo.news(symbol.upper() if symbol else None)
 
 
+@app.get("/api/securities/earnings")
+def earnings(symbol: Symbol) -> Envelope[research.Earnings]:
+    return research.earnings(symbol.upper())
+
+
+@app.get("/api/securities/dividends")
+def dividends(symbol: Symbol) -> Envelope[research.Dividends]:
+    return research.dividends(symbol.upper())
+
+
+# ── Valuation ─────────────────────────────────────────────────────────────────
+
+
+def _symbols(raw: str | None) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(s.strip().upper() for s in (raw or "").split(",") if s.strip()))
+
+
+@app.get("/api/valuation/dcf/inputs")
+def dcf_inputs(symbol: Symbol) -> Envelope[valuation.DcfInputs]:
+    return valuation.dcf_inputs(symbol.upper())
+
+
+class DcfRequest(BaseModel):
+    symbol: str
+    assumptions: dcf.DcfAssumptions
+
+
+@app.post("/api/valuation/dcf")
+def dcf_value(request: DcfRequest) -> Envelope[valuation.DcfResult]:
+    return valuation.dcf_value(request.symbol.upper(), request.assumptions)
+
+
+@app.get("/api/valuation/comps")
+def comps(
+    symbol: Symbol, peers: Annotated[str | None, Query(max_length=200)] = None
+) -> Envelope[valuation.Comps]:
+    return valuation.comps(symbol.upper(), _symbols(peers)[:12])
+
+
 # ── Markets ───────────────────────────────────────────────────────────────────
 
 
@@ -94,6 +145,11 @@ def quotes(
 ) -> Envelope[list[yahoo.Quote]]:
     wanted = tuple(dict.fromkeys(s.strip().upper() for s in symbols.split(",") if s.strip()))
     return yahoo.quotes(wanted[:40])
+
+
+@app.get("/api/movers")
+def movers(kind: research.MoverKind = "gainers") -> Envelope[list[research.Mover]]:
+    return research.movers(kind)
 
 
 @app.get("/api/monitors/{monitor_id}")

@@ -35,6 +35,22 @@ describe('parseCommand', () => {
     expect(parseCommand('eco us.cpi')).toMatchObject({ params: { series: 'US.CPI' } })
   })
 
+  it('parses compare, peer and movers arguments', () => {
+    expect(parseCommand('race gp 2y vs stla ^gspc')).toMatchObject({
+      fn: 'GP',
+      security: 'RACE',
+      params: { range: '2Y', cmp: 'STLA,^GSPC' },
+    })
+    expect(parseCommand('RACE GP VS')).toMatchObject({ kind: 'error' })
+    expect(parseCommand('race comp p911.de stla')).toMatchObject({
+      fn: 'COMP',
+      params: { peers: 'P911.DE,STLA' },
+    })
+    expect(parseCommand('race comp')).toMatchObject({ params: { peers: '' } })
+    expect(parseCommand('most losers')).toMatchObject({ fn: 'MOST', params: { kind: 'losers' } })
+    expect(parseCommand('RACE DCF')).toMatchObject({ fn: 'DCF', security: 'RACE' })
+  })
+
   it('turns watchlist verbs into actions', () => {
     expect(parseCommand('wl add nvda')).toMatchObject({
       fn: 'WL',

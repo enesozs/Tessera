@@ -13,8 +13,8 @@ from playwright.sync_api import ConsoleMessage, Page, Response, expect, sync_pla
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5180"
 SHOTS = Path(sys.argv[2]) if len(sys.argv) > 2 else None
 
-# The SEC endpoint legitimately answers 503 when SEC_USER_AGENT is not configured.
-ALLOWED = ("/api/securities/filings",)
+# Expected errors: SEC answers 503 without SEC_USER_AGENT; a bank's DCF is refused with 422.
+ALLOWED = ("/api/securities/filings", "/api/valuation/dcf/inputs?symbol=ISP.MI")
 
 
 def shot(page: Page, name: str) -> None:
@@ -61,7 +61,8 @@ def main() -> int:
         expect(page.get_by_text("API connected")).to_be_visible(timeout=15_000)
 
         # Each default workspace loads without errors.
-        for i, name in enumerate(["Markets", "Equity · RACE", "Rates & Macro", "Watchlist"]):
+        workspaces = ["Markets", "Equity · RACE", "Rates & Macro", "Watchlist", "Valuation · RACE"]
+        for i, name in enumerate(workspaces):
             page.get_by_role("navigation", name="Workspaces").get_by_text(name).click()
             settle(page)
             shot(page, f"{i + 1}-{name.split(' ')[0].lower()}")
@@ -80,13 +81,36 @@ def main() -> int:
 
         # Every remaining function opens in a new pane of a fresh workspace.
         page.get_by_title("New workspace").click()
-        for cmd in ["AAPL HP", "AAPL FA RATIOS", "AAPL FIL", "HELP"]:
+        for cmd in [
+            "AAPL HP",
+            "AAPL FA RATIOS",
+            "AAPL FIL",
+            "AAPL DVD",
+            "NVDA ERN",
+            "MOST LOSERS",
+            "MSFT DCF",
+            "HELP",
+        ]:
             command(page, cmd)
             settle(page)
             shot(page, "fn-" + cmd.replace(" ", "-").lower())
         command(page, "ECO US.CPI")
         settle(page)
         shot(page, "fn-eco-series")
+
+        # DCF: editing an assumption recomputes the valuation; banks are refused with a reason.
+        command(page, "RACE DCF")
+        settle(page)
+        value = page.locator("text=Intrinsic value / share").locator("..").inner_text()
+        box = page.get_by_label("Terminal growth")
+        box.fill("3.5")
+        box.press("Enter")
+        expect(page.locator("text=Intrinsic value / share").locator("..")).not_to_have_text(
+            value, timeout=15_000
+        )
+        shot(page, "fn-race-dcf-edited")
+        command(page, "ISP.MI DCF")
+        expect(page.get_by_text("Not applicable")).to_be_visible(timeout=20_000)
 
         # Name search resolves to a ticker; errors are shown inline.
         command(page, "ferrari")

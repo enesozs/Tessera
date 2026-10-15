@@ -39,7 +39,14 @@ const SOURCES: [string, string, string][] = [
   ['SEC EDGAR', 'Company filings', 'Official; needs SEC_USER_AGENT'],
 ]
 
-const CATEGORIES: Category[] = ['Security', 'Markets', 'Rates & FX', 'Macro', 'Terminal']
+const CATEGORIES: Category[] = [
+  'Security',
+  'Valuation',
+  'Markets',
+  'Rates & FX',
+  'Macro',
+  'Terminal',
+]
 
 export function Help() {
   const run = useWorkspace((s) => s.run)

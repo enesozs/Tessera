@@ -243,3 +243,196 @@ export interface MacroSummary {
   previous: Observation | null
   spark: number[]
 }
+
+// ── Valuation & research ──────────────────────────────────────────────────────
+
+export interface DcfAssumptions {
+  years: number
+  revenue_growth_start: number
+  terminal_growth: number
+  ebit_margin_start: number
+  ebit_margin_target: number
+  tax_rate: number
+  da_pct_revenue: number
+  capex_pct_revenue: number
+  nwc_pct_delta_revenue: number
+  risk_free: number
+  equity_risk_premium: number
+  beta: number
+  cost_of_debt: number
+  mid_year: boolean
+}
+
+export interface CapitalStructure {
+  base_revenue: number
+  market_cap: number
+  total_debt: number
+  cash: number
+  minority_interest: number
+  shares: number
+}
+
+export interface HistoryYear {
+  period: string
+  revenue: number | null
+  growth: number | null
+  ebit: number | null
+  margin: number | null
+  tax_rate: number | null
+  da: number | null
+  capex: number | null
+  delta_nwc: number | null
+  fcff: number | null
+}
+
+export interface DcfInputs {
+  symbol: string
+  name: string
+  currency: string
+  financial_currency: string
+  fx_rate: number
+  price: number
+  base_period: string
+  capital: CapitalStructure
+  history: HistoryYear[]
+  defaults: DcfAssumptions
+  sources: Partial<Record<keyof DcfAssumptions, string>>
+}
+
+export interface ProjectionYear {
+  year: number
+  revenue: number
+  growth: number
+  ebit: number
+  margin: number
+  taxes: number
+  nopat: number
+  da: number
+  capex: number
+  delta_nwc: number
+  fcff: number
+  discount_factor: number
+  present_value: number
+}
+
+export interface DcfResult {
+  symbol: string
+  currency: string
+  financial_currency: string
+  fx_rate: number
+  price: number
+  valuation: {
+    wacc: {
+      cost_of_equity: number
+      cost_of_debt_after_tax: number
+      weight_equity: number
+      weight_debt: number
+      wacc: number
+    }
+    projection: ProjectionYear[]
+    terminal_fcff: number
+    terminal_value: number
+    pv_terminal_value: number
+    sum_pv_fcff: number
+    enterprise_value: number
+    equity_value: number
+    per_share: number
+    terminal_share_of_ev: number
+    implied_exit_ev_ebitda: number | null
+  }
+  per_share_quote: number
+  upside: number | null
+  sensitivity: { waccs: number[]; growths: number[]; per_share: (number | null)[][] }
+}
+
+export const COMP_METRICS = [
+  'market_cap_usd',
+  'trailing_pe',
+  'forward_pe',
+  'ev_to_ebitda',
+  'ev_to_revenue',
+  'price_to_book',
+  'dividend_yield',
+  'gross_margin',
+  'operating_margin',
+  'profit_margin',
+  'return_on_equity',
+  'revenue_growth',
+  'beta',
+] as const
+export type CompMetric = (typeof COMP_METRICS)[number]
+
+export type CompRow = {
+  symbol: string
+  name: string
+  is_target: boolean
+  country: string | null
+  currency: string | null
+  price: number | null
+  error: string | null
+} & Record<CompMetric, number | null>
+
+export interface Comps {
+  symbol: string
+  industry: string | null
+  peers_source: 'industry' | 'user'
+  rows: CompRow[]
+  median: Record<CompMetric, number | null>
+}
+
+export interface Estimate {
+  period: string
+  avg: number | null
+  low: number | null
+  high: number | null
+  analysts: number | null
+  year_ago: number | null
+  growth: number | null
+}
+
+export interface Earnings {
+  symbol: string
+  currency: string | null
+  next_date: string | null
+  history: {
+    date: string
+    eps_estimate: number | null
+    eps_actual: number | null
+    surprise_pct: number | null
+  }[]
+  revenue_estimates: Estimate[]
+  eps_estimates: Estimate[]
+  eps_revisions: {
+    period: string
+    current: number | null
+    days_7: number | null
+    days_30: number | null
+    days_60: number | null
+    days_90: number | null
+  }[]
+}
+
+export interface Dividends {
+  symbol: string
+  currency: string | null
+  payments: { date: string; amount: number }[]
+  annual: { year: number; total: number; payments: number; growth: number | null }[]
+  splits: { date: string; ratio: number }[]
+  next_ex_date: string | null
+  next_pay_date: string | null
+  trailing_12m: number | null
+}
+
+export type MoverKind = 'gainers' | 'losers' | 'actives'
+
+export interface Mover {
+  symbol: string
+  name: string
+  exchange: string | null
+  currency: string | null
+  price: number | null
+  change_pct: number | null
+  volume: number | null
+  avg_volume_3m: number | null
+  market_cap: number | null
+}

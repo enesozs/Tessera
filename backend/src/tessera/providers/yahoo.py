@@ -142,6 +142,9 @@ class Profile(BaseModel):
     target_mean_price: float | None
     analyst_count: int | None
     recommendation: str | None
+    revenue_growth: float | None
+    earnings_growth: float | None
+    industry_key: str | None
 
 
 @cached(ttl=300)
@@ -225,6 +228,9 @@ def profile(symbol: str) -> Envelope[Profile]:
         target_mean_price=_num(info.get("targetMeanPrice")),
         analyst_count=int(analysts) if isinstance(analysts, int | float) else None,
         recommendation=info.get("recommendationKey"),
+        revenue_growth=_num(info.get("revenueGrowth")),
+        earnings_growth=_num(info.get("earningsGrowth")),
+        industry_key=info.get("industryKey"),
     )
     notes = [DELAY_NOTE]
     if data.financial_currency and data.currency and data.financial_currency != data.currency:

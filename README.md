@@ -30,11 +30,16 @@ so they can run side by side; override with `make dev API_PORT=… WEB_PORT=…`
 | Code | Function | Example |
 | --- | --- | --- |
 | `DES` | Company profile, quote, valuation and fundamentals | `RACE DES` |
-| `GP` | Price chart: candles/line/area, volume, SMA 20/50/200, log, dividend-adjusted | `^GSPC GP 5Y` |
+| `GP` | Price chart: candles/line/area, volume, SMA 20/50/200, log, dividend-adjusted; `VS` compares % performance | `RACE GP 5Y VS FTSEMIB.MI ^GSPC` |
 | `HP` | Historical prices with return, realised volatility, drawdown | `RACE.MI HP` |
 | `FA` | Income statement, balance sheet, cash flow, derived ratios | `AAPL FA BS Q` |
 | `NEWS` | Headlines for a security, or top market news | `NVDA NEWS` |
 | `FIL` | SEC EDGAR filings with links to originals | `AAPL FIL` |
+| `DVD` | Dividend history, annual totals, growth, yield, splits | `AAPL DVD` |
+| `ERN` | Next report date, EPS surprises, consensus estimates and revisions | `RACE ERN` |
+| `DCF` | FCFF valuation with sourced, editable assumptions and sensitivity grid | `RACE DCF` |
+| `COMP` | Multiples, margins and growth vs industry or custom peers | `RACE COMP P911.DE STLA` |
+| `MOST` | Top U.S. gainers, losers and most active | `MOST LOSERS` |
 | `WEI` | World equity indices by region | `WEI` |
 | `CMDTY` | Energy, metals and agriculture futures | `CMDTY` |
 | `WL` | Your watchlist (stored in the browser) | `WL ADD ASML` |

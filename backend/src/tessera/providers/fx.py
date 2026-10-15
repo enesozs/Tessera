@@ -101,3 +101,37 @@ def pair_history(base: str, quote: str, years: int = 5) -> Envelope[FxHistory]:
             notes=[NOTE],
         ),
     )
+
+
+# Quotes in minor units (pence, cents) carry these Yahoo currency codes.
+MINOR_UNITS = {
+    "GBp": ("GBP", 100.0),
+    "GBX": ("GBP", 100.0),
+    "ZAc": ("ZAR", 100.0),
+    "ILA": ("ILS", 100.0),
+}
+
+
+def normalise_currency(code: str) -> tuple[str, float]:
+    """('GBp') → ('GBP', 100): the major currency and how many minor units make one."""
+    return MINOR_UNITS.get(code, (code.upper(), 1.0))
+
+
+@cached(ttl=3600)
+def _latest(base: str, quote: str) -> Envelope[FxPoint]:
+    payload = http.get_json(f"{API}/latest", params={"base": base, "symbols": quote})
+    rate = (payload.get("rates") or {}).get(quote)
+    if rate is None:
+        raise NotFoundError(f"No ECB reference rate for {base}/{quote}")
+    return Envelope(
+        data=FxPoint(date=payload["date"], rate=float(rate)),
+        meta=Provenance(source="ECB via Frankfurter", freshness="reference", notes=[NOTE]),
+    )
+
+
+def spot(base: str, quote: str) -> float:
+    """Units of `quote` per one `base`, from the latest ECB fixing (minor units handled)."""
+    b, b_div = normalise_currency(base)
+    q, q_div = normalise_currency(quote)
+    rate = 1.0 if b == q else _latest(b, q).data.rate
+    return rate * q_div / b_div

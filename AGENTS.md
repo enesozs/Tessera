@@ -26,16 +26,23 @@ owner, not in the repo). Treat it as a menu of ideas, not a spec.
 
 ## 2. Current state (2026-10-15)
 
-**MVP complete.** 14 functions: `DES GP HP FA NEWS FIL WEI CMDTY WL FX YC SOV ECO HELP`.
+**MVP complete; roadmap phase 1 (equity depth) complete.** 19 functions:
+`DES GP HP FA NEWS FIL DVD ERN DCF COMP WEI CMDTY MOST WL FX YC SOV ECO HELP`.
 
-- Shell: workspace tabs (4 presets: Markets, Equity · RACE, Rates & Macro, Watchlist), 1–6 tiled
+- Phase 1 added: `DCF` (pure model in `tessera/dcf.py`, inputs/defaults with stated sources in
+  `tessera/valuation.py`; refuses banks/insurers with a reason, HTTP 422), `COMP` (Yahoo industry
+  peers filtered by index weight, or a custom list; medians exclude negative multiples), `GP … VS …`
+  compare mode (Lightweight Charts percentage scale), `ERN`, `DVD`, `MOST` (`providers/research.py`).
+- Shell: workspace tabs (5 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
+  Valuation · RACE — the last added by a persisted-state migration, version 2), 1–6 tiled
   resizable panes, maximise, duplicate, link groups (4 colours), command line with autocomplete
   (functions, Yahoo search, examples, history), name→ticker resolution, global shortcuts,
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 29 backend (pytest, offline), 6 frontend (vitest, command grammar), Playwright smoke
-  test across every workspace and function (`make e2e`).
+- Tests: 41 backend (pytest, offline — includes a hand-computed DCF), 7 frontend (vitest, command
+  grammar), Playwright smoke test across every workspace and function, including a DCF edit
+  round-trip (`make e2e`).
 
 ---
 
@@ -94,8 +101,7 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
 
 ## 6. Roadmap (proposed — owner decides the order)
 
-1. **Equity depth:** `DCF` (FCFF model on FA data, WACC, sensitivity grid), `COMP` peer table,
-   `GP` compare overlay (normalised performance vs index), `DVD` dividends, earnings calendar.
+1. ~~**Equity depth:** `DCF`, `COMP`, `GP` compare, `DVD`, `ERN`, `MOST`~~ — done.
 2. **Fixed income:** `BOND` calculator (price ↔ yield, accrued, duration, convexity, DV01),
    bootstrapped spot/forward curves from par yields, curve shock P&L.
 3. **Options:** `OPT` chain from Yahoo, IV smile/term structure, pricing via project 05's `derivlab`.
