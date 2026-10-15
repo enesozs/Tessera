@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tessera"
+version = "0.1.0"
+description = "Tessera — a keyboard-first financial terminal built on free public data"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "fastapi[standard]>=0.143",
+    "httpx>=0.28",
+    "pandas>=2.2",
+    "yfinance>=1.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx2>=2.13", "ruff>=0.6", "pyright>=1.1.380", "playwright>=1.50"]
+
+[tool.fastapi]
+entrypoint = "tessera_api.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tessera", "src/tessera_api"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+# Line length is the formatter's job; data tables marked `fmt: skip` may run long.
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.pyright]
+include = ["src", "tests"]
+typeCheckingMode = "standard"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"

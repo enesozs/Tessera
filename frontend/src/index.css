@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+
+/*
+ * Tessera design tokens. A terminal is read for hours: near-black surfaces, low-contrast
+ * structure, and colour reserved for meaning — amber for "you are here / command",
+ * green/red for direction, link-group hues for pane wiring.
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --color-canvas: #08090b;
+  --color-surface: #0e1013;
+  --color-raised: #14171b;
+  --color-hover: #1a1e23;
+  --color-line: #1f242a;
+  --color-line-strong: #2b3138;
+
+  --color-fg: #e4e7eb;
+  --color-fg-2: #a3acb7;
+  --color-fg-3: #6b7581;
+  --color-fg-4: #49515b;
+
+  --color-amber: #ffb020;
+  --color-amber-dim: #8a6215;
+  --color-up: #2ec27e;
+  --color-down: #ff5d5d;
+  --color-info: #5aa9ff;
+
+  --color-link-cyan: #22d3ee;
+  --color-link-violet: #a78bfa;
+  --color-link-lime: #a3e635;
+  --color-link-rose: #fb7185;
+
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-amber) 35%, transparent);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+  :focus-visible {
+    outline: 1px solid var(--color-amber);
+    outline-offset: -1px;
+  }
+}
+
+@utility num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 0;
+  letter-spacing: -0.01em;
+}
+
+@utility pane-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* Dense data tables shared by every function. */
+@layer components {
+  .dt {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .dt th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface);
+    color: var(--color-fg-3);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: right;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--color-line);
+    white-space: nowrap;
+  }
+  .dt th:first-child,
+  .dt td:first-child {
+    text-align: left;
+  }
+  .dt td {
+    padding: 3px 8px;
+    height: 22px;
+    text-align: right;
+    white-space: nowrap;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-line) 55%, transparent);
+  }
+  .dt tbody tr:hover td {
+    background: var(--color-hover);
+  }
+  .dt .group td {
+    color: var(--color-amber);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding-top: 9px;
+    background: transparent;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200px 0;
+  }
+  to {
+    background-position: 200px 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-fg) 5%, transparent),
+      transparent
+    )
+    var(--color-raised);
+  background-size: 200px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.2s infinite linear;
+  border-radius: 2px;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

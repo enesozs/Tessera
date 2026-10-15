@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+
+# Local data cache (provider responses) and secrets
+backend/.cache/
+.env
+
+# Node
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+.idea/
+e2e/screenshots/
