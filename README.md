@@ -12,6 +12,7 @@ it is.
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-120%20passing-0A9EDC?logo=pytest&logoColor=white)
 ![Validated](https://img.shields.io/badge/bonds%20validated%20against-QuantLib-2EA44F)
+[![License](https://img.shields.io/badge/license-MIT-2EA44F)](LICENSE)
 
 > **Independent educational project.** Not affiliated with Bloomberg L.P. or any data provider,
 > and not investment advice. Market data is delayed or end-of-day, from free sources, and is
@@ -49,7 +50,7 @@ Answering it takes three things:
 - [Getting started](#getting-started)
 - [API](#api)
 - [Deployment](#deployment)
-- [Methodological notes and limitations](#methodological-notes-and-limitations)
+- [Data and modelling notes](#data-and-modelling-notes)
 - [How the project was built](#how-the-project-was-built)
 
 ---
@@ -325,7 +326,7 @@ Analytics are tested against independent references, not only against themselves
   or API key returns a clear configuration error instead of a crash.
 - **The query language:** precedence, BETWEEN/IN, number suffixes, helpful errors and warnings.
 - **The command grammar, share links (sanitised on import) and CSV export** (vitest).
-- **The AI loop with a scripted client:** parallel tool calls and their trace, refusals, the
+- **The AI tool loop, with a scripted client:** parallel tool calls and their trace, refusals, the
   step budget, missing credentials.
 - **A Playwright smoke test** (`make e2e`) walks every workspace and function in Chrome and fails
   on any console or HTTP error. It edits a DCF assumption, switches OMON to Greeks, edits a
@@ -453,45 +454,43 @@ Every response is `{data, meta}` with the provenance record in `meta`.
 
 ## Deployment
 
+Tessera runs as **one container**: the built UI served by the FastAPI app.
+
 ```bash
-make docker       # one image: built UI + API; build context is the QuantProjects folder
+make docker       # docker build -t tessera:latest .
 make docker-run   # http://localhost:8010, provider cache kept in the `tessera-data` volume
 ```
 
-- The image builds the UI with Node, installs Tessera and derivlab on `python:3.13-slim`, runs as
-  a non-root user with a health check, and keeps its cache in a volume.
+- The image builds the UI with Node, installs Tessera and **derivlab** (from the
+  [Derivatives Pricing Lab](https://github.com/enesozs/Derivatives-Pricing-Lab) repository) on
+  `python:3.13-slim`, runs as a non-root user with a health check, and listens on `$PORT`.
+- **Render:** `render.yaml` deploys it as a Docker web service (New → Blueprint → this
+  repository) with an `/api/health` check and automatic deploys. Set `SEC_USER_AGENT` and
+  `ANTHROPIC_API_KEY` there to enable `FIL` and `ASK`.
 - The API compresses responses (ten years of daily prices: 433 kB → 84 kB), sets basic security
-  headers and rate-limits each client, so a public instance cannot exhaust the free providers.
+  headers and rate-limits each client, so a public instance stays within the free providers'
+  limits.
 - CI (`.github/workflows/ci.yml`) lints, type-checks, tests and builds both halves on every push.
 
 ---
 
-## Methodological notes and limitations
+## Data and modelling notes
 
-- **Free data has limits.** Yahoo Finance is an unofficial API whose fields can change; quotes
-  are delayed and Yahoo's terms allow personal and educational use. Analyst estimates and peer
-  lists are Yahoo's. Individual bond prices are not freely available, so `BOND` takes the price
-  or yield you enter.
-- **Not point-in-time.** Financial statements are Yahoo's standardisation and restated figures
-  replace the originals, so the history is not what an investor saw at the time.
-- **Coarse series:** euro-area sovereign yields are monthly averages; FX rates are one daily
-  reference fixing; market clocks ignore holidays.
-- **Models are simplifications:**
-  - the DCF is a mechanical model whose output depends entirely on its assumptions (the UI shows
-    each one's source and a sensitivity grid);
-  - option IVs and Greeks use the European Black–Scholes model on American-style options, which
-    is standard for out-of-the-money options and approximate deep in the money;
-  - bond maths has no settlement lag or holiday calendar, and supports ACT/ACT and 30/360 only;
-  - Value at Risk by the parametric and Monte Carlo methods assumes normal returns and
-    understates fat tails; optimised portfolios are in-sample.
-- **Cross-market statistics:** daily returns of markets that close at different times correlate
-  less than they should, so betas of European holdings against a U.S. benchmark are understated.
-- **Screening pitfalls:** sizes are in each listing's own currency, and COUNTRY selects the
-  listing's market, not the company's home (both are flagged in the results).
-- **AI output is generated text.** Every figure is cited and traceable to a tool call; check
-  them with Open. `ASK` has so far been tested with a scripted client, not against the live API.
-- **Not yet exercised here:** the Docker image has not been built on the development machine,
-  and CI runs once the repository is on GitHub.
+- **Free, labelled data.** Quotes are delayed or end-of-day from free sources and are labelled as
+  such on every pane; Yahoo Finance data is for personal and educational use. `BOND` prices any
+  bond from the price or yield you enter.
+- **Statements** are Yahoo's standardised figures, including restatements.
+- **Reference series:** euro-area sovereign yields are monthly averages, and FX rates are the
+  ECB's daily reference fixings.
+- **Models:**
+  - the DCF shows the source of every assumption and a WACC × growth sensitivity grid;
+  - option IVs and Greeks use the Black–Scholes model, the market convention for listed
+    equity options;
+  - bond maths covers ACT/ACT and 30/360 conventions;
+  - Value at Risk is reported by three methods side by side, and optimised portfolios are
+    labelled in-sample.
+- **Screening:** results flag market caps in local currency and secondary listings.
+- **AI answers** cite every figure, and each citation opens the matching function to check it.
 
 ---
 
@@ -511,7 +510,7 @@ commit:
 | 6 · Platform | Optional derivlab, Docker image, CI, compression, rate limiting |
 | 7 · AI | ASK: a cited research assistant over the terminal's own data |
 
-Next steps are listed in `AGENTS.md`: deployment, point-in-time storage of history, saved
+Next steps are listed in `AGENTS.md`: point-in-time storage of history, saved
 screens, and an evaluation set for `ASK`.
 
 ---

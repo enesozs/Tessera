@@ -1,0 +1,15 @@
+# Render Blueprint: New → Blueprint → pick this repository.
+# The two keys are optional: SEC_USER_AGENT enables FIL (SEC filings), ANTHROPIC_API_KEY enables
+# ASK. Render asks for their values when the Blueprint is created.
+services:
+  - type: web
+    name: tessera
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: SEC_USER_AGENT
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

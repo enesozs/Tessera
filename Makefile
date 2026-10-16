@@ -55,8 +55,8 @@ build:              ## Production build of the frontend (served by FastAPI from 
 serve: build        ## Single process: API + built UI on http://localhost:8010
 	cd backend && .venv/bin/fastapi run --port $(API_PORT)
 
-docker:             ## Build the single-container image (context: the QuantProjects folder)
-	docker build -f Dockerfile -t tessera:latest ..
+docker:             ## Build the single-container image (derivlab from GitHub, or DERIVLAB=<pip spec>)
+	docker build $(if $(DERIVLAB),--build-arg DERIVLAB="$(DERIVLAB)") -t tessera:latest .
 
 docker-run:         ## Run the image on http://localhost:8010 (cache in a named volume)
 	docker run --rm -p 8010:8010 -v tessera-data:/data $(if $(SEC_USER_AGENT),-e SEC_USER_AGENT="$(SEC_USER_AGENT)") $(if $(ANTHROPIC_API_KEY),-e ANTHROPIC_API_KEY) tessera:latest

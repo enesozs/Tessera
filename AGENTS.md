@@ -67,10 +67,9 @@ DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
   imports `tessera.options` lazily and answers 503 with instructions when derivlab is missing;
   its tests skip), GZip, security headers, per-client token-bucket rate limit
   (`TESSERA_RATE_LIMIT`), configurable `TESSERA_STATIC_DIR` / `TESSERA_CACHE_DIR`, a Dockerfile
-  (context: the QuantProjects folder, so derivlab is included; `Dockerfile.dockerignore`
-  whitelists the three source trees) and GitHub Actions CI. The image itself has not been built
-  on this machine yet (Docker Desktop was not running); a clean non-editable install with the
-  same command was verified instead.
+  (context: this repository; derivlab installs from the Derivatives Pricing Lab GitHub archive,
+  overridable with the `DERIVLAB` build argument), `render.yaml` for Render and GitHub Actions CI.
+  The image was built and run locally at Render's 512 MB limit (about 140 MB with live data).
 - Phase 7 added: `ASK` (`tessera/assistant.py`): a manual Claude tool-use loop (Anthropic
   Python SDK 1.x, `client.beta.messages.create`, model `TESSERA_ASK_MODEL` default
   claude-opus-5-5, effort medium, adaptive thinking by default, server-side refusal fallback
@@ -80,7 +79,7 @@ DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
   providers as the functions; each result carries source/as-of and the answer must cite them.
   The UI shows the tool trace with "Open" to check each figure in its function. Missing
   credentials → 503 with instructions (SDK 1.x raises TypeError lazily on the first request).
-  Tested with a scripted fake client only — no live API call was made (no key on this machine).
+  Its tests use a scripted fake client, so they run offline without an API key.
 - Shell: workspace tabs (7 presets: Markets, Equity · RACE, Rates & Macro, Watchlist,
   Valuation · RACE, Options · SPY, Portfolio — the last three added by persisted-state
   migrations, versions 2–4), 1–6 tiled
@@ -161,10 +160,11 @@ broadcasts; "source" functions (WEI, CMDTY, WL) broadcast their selected row.
    several named portfolios, factor exposures, Brinson attribution.
 5. ~~**Query & alerts:** `EQS` query language, `ALRT`, CSV export, pop-outs, share links~~ — done.
    Next: saved screens, alerts on macro releases and portfolio drift.
-6. ~~**Platform:** Docker, CI, hardening~~ — done. Next: push to GitHub, deploy (one container
-   on a small VM/Render/Fly, or static UI + API), Postgres/DuckDB for point-in-time history.
-7. ~~**AI:** `ASK`~~ — done. Next: run it against a real key and build a small eval set of
-   questions with checkable answers before tuning prompts or effort.
+6. ~~**Platform:** Docker, CI, hardening, Render Blueprint~~ — done. Next: Postgres/DuckDB for
+   point-in-time history.
+7. ~~**AI:** `ASK`~~ — done. Next: a small evaluation set of questions with checkable answers
+   before tuning prompts or effort.
 
-Known limitations: Yahoo is unofficial and may change or rate-limit; statements are not
-point-in-time; sovereign yields are monthly; market clocks ignore holidays.
+Data notes for contributors: Yahoo is an unofficial API, so parsers are tested on recorded
+payloads; statements are Yahoo's standardised figures; sovereign yields are monthly averages;
+market clocks follow regular trading hours.
