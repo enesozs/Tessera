@@ -8,14 +8,16 @@ WEB_PORT ?= 5180
 -include .env
 export
 
-.PHONY: install dev api web test e2e lint check build serve docker docker-run
+.PHONY: install dev api web test e2e readme-shots lint check build serve docker docker-run
 
 install:            ## Create the Python venv and install both halves
 	python3 -m venv backend/.venv
 	$(PY)/pip install -q --upgrade pip
 	$(PY)/pip install -q -e "backend[dev]"
-	# Option analytics (OMON, IVOL) use the pricing library from the sibling project 05.
-	$(PY)/pip install -q -e ../05-derivatives-pricing-lab/backend
+	# Option analytics (OMON, IVOL) use the pricing library from the sibling project 05, if present.
+	@if [ -d ../05-derivatives-pricing-lab/backend ]; then \
+		$(PY)/pip install -q -e ../05-derivatives-pricing-lab/backend; \
+	else echo "derivlab (project 05) not found: OMON and IVOL will be unavailable"; fi
 	cd frontend && npm install
 
 dev:                ## API on :8010 + Vite on :5180 (open http://localhost:5180)
@@ -36,6 +38,9 @@ test:               ## Backend (pytest) and frontend (vitest) unit tests — off
 
 e2e:                ## Browser smoke test against running dev servers (needs `make dev` + Chrome)
 	$(PY)/python e2e/smoke.py http://localhost:$(WEB_PORT)
+
+readme-shots:       ## Re-capture docs/screenshots/*.jpg for the README (needs `make dev` + Chrome)
+	$(PY)/python e2e/readme_shots.py http://localhost:$(WEB_PORT)
 
 lint:               ## Format + lint + type-check both halves
 	cd backend && .venv/bin/ruff format . ../e2e && .venv/bin/ruff check . ../e2e && .venv/bin/pyright
