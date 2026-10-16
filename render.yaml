@@ -3,7 +3,7 @@
 # ASK. Render asks for their values when the Blueprint is created.
 services:
   - type: web
-    name: tessera
+    name: tessera-terminal
     runtime: docker
     region: frankfurt
     plan: free
