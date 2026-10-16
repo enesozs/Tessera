@@ -5,6 +5,7 @@ services:
   - type: web
     name: tessera
     runtime: docker
+    region: frankfurt
     plan: free
     healthCheckPath: /api/health
     autoDeploy: true
