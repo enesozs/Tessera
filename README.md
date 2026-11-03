@@ -467,6 +467,10 @@ make docker-run   # http://localhost:8010, provider cache kept in the `tessera-d
 - **Render:** `render.yaml` deploys it as a Docker web service (New → Blueprint → this
   repository) with an `/api/health` check and automatic deploys. Set `SEC_USER_AGENT` and
   `ANTHROPIC_API_KEY` there to enable `FIL` and `ASK`.
+- **Vercel:** `vercel.json` deploys it as one project with two services, the built UI (`web`)
+  and the FastAPI app (`api`, a Python function with derivlab installed from GitHub), with
+  `/api/*` routed to the API. Set the same two keys as project environment variables. The
+  provider cache is in memory there, since the function's file system is read-only.
 - The API compresses responses (ten years of daily prices: 433 kB → 84 kB), sets basic security
   headers and rate-limits each client, so a public instance stays within the free providers'
   limits.

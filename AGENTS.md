@@ -69,6 +69,8 @@ DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
   (`TESSERA_RATE_LIMIT`), configurable `TESSERA_STATIC_DIR` / `TESSERA_CACHE_DIR`, a Dockerfile
   (context: this repository; derivlab installs from the Derivatives Pricing Lab GitHub archive,
   overridable with the `DERIVLAB` build argument), `render.yaml` for Render and GitHub Actions CI.
+  `vercel.json` deploys to Vercel as services `web` + `api` (derivlab via the install command);
+  the cache falls back to memory when its directory cannot be created (read-only file system).
   The image was built and run locally at Render's 512 MB limit (about 140 MB with live data).
 - Phase 7 added: `ASK` (`tessera/assistant.py`): a manual Claude tool-use loop (Anthropic
   Python SDK 1.x, `client.beta.messages.create`, model `TESSERA_ASK_MODEL` default

@@ -43,7 +43,11 @@ class Cache:
         self._locks: dict[str, threading.Lock] = {}
         self._guard = threading.Lock()
         if directory is not None:
-            directory.mkdir(parents=True, exist_ok=True)
+            try:
+                directory.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:  # e.g. a read-only serverless file system: memory only
+                log.warning("disk cache disabled (%s): %s", directory, exc)
+                self.directory = None
 
     def _lock_for(self, key: str) -> threading.Lock:
         with self._guard:
