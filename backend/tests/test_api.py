@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -36,7 +38,45 @@ def test_symbols_are_validated_and_upper_cased(monkeypatch):
 
 
 def test_health():
-    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/api/health").json() == {"status": "ok", "public_demo": False}
+
+
+def test_public_demo_serves_the_api_to_the_app_only(monkeypatch):
+    monkeypatch.setenv("TESSERA_PUBLIC_DEMO", "1")
+    monkeypatch.setattr(
+        yahoo,
+        "quotes",
+        lambda _s: Envelope(data=[], meta=Provenance(source="t", freshness="delayed")),
+    )
+    url, params = "/api/quotes", {"symbols": "AAPL"}
+    assert client.get("/api/health").json() == {"status": "ok", "public_demo": True}
+    assert client.get(url, params=params).status_code == 403  # a script, no browser headers
+    assert (
+        client.get(url, params=params, headers={"Sec-Fetch-Site": "cross-site"}).status_code == 403
+    )
+    assert (
+        client.get(url, params=params, headers={"Sec-Fetch-Site": "same-origin"}).status_code == 200
+    )
+    # Browsers without Fetch Metadata: the page's address must be this host.
+    ok = {"Referer": "http://testserver/?ws=x"}
+    assert client.get(url, params=params, headers=ok).status_code == 200
+    bad = {"Referer": "https://elsewhere.example/"}
+    assert client.get(url, params=params, headers=bad).status_code == 403
+
+
+def test_public_demo_leaves_out_the_interactive_docs():
+    import subprocess
+    import sys
+
+    code = (
+        "from fastapi.testclient import TestClient\n"
+        "from tessera_api.main import app\n"
+        "print(TestClient(app).get('/openapi.json').status_code)"
+    )
+    env = {**os.environ, "TESSERA_PUBLIC_DEMO": "1", "TESSERA_STATIC_DIR": "/nonexistent"}
+    out = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True)
+    assert out.stdout.strip() == "404", out.stderr
+    assert client.get("/openapi.json").status_code == 200
 
 
 def test_option_endpoints_explain_a_missing_derivlab(monkeypatch):

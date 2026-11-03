@@ -225,7 +225,7 @@ export const useMacroSeries = (id: string | undefined) =>
 export const useHealth = () =>
   useQuery({
     queryKey: ['health'],
-    queryFn: () => get<{ status: string }>('/health'),
+    queryFn: () => get<{ status: string; public_demo?: boolean }>('/health'),
     refetchInterval: 30_000,
     retry: false,
   })

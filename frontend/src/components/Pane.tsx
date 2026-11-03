@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { Component, useRef, type ReactNode } from 'react'
-import { useProfile } from '@/api/client'
+import { useHealth, useProfile } from '@/api/client'
 import { COMPONENTS } from '@/functions'
 import { BY_CODE, FUNCTIONS } from '@/functions/registry'
 import { parseCommand } from '@/lib/command'
@@ -35,10 +35,17 @@ export function Pane({
   const splitPane = useWorkspace((s) => s.splitPane)
   const push = useToasts((s) => s.push)
   const bodyRef = useRef<HTMLDivElement>(null)
+  const publicDemo = useHealth().data?.public_demo ?? false
   const spec = pane.fn ? BY_CODE[pane.fn] : null
   const Body = pane.fn ? COMPONENTS[pane.fn] : null
 
   const exportCsv = () => {
+    // Yahoo's terms cover personal use, so a public demo shows its data but does not hand it
+    // out as files. Tessera's own models built on it (DCF, PORT) name themselves as the source.
+    const sources = [...(bodyRef.current?.querySelectorAll('[data-source]') ?? [])]
+    if (publicDemo && sources.some((el) => el.getAttribute('data-source')?.startsWith('Yahoo'))) {
+      return push('CSV export of Yahoo Finance data is available when Tessera runs locally')
+    }
     const csv = bodyRef.current ? tablesToCsv(bodyRef.current) : ''
     if (!csv) return push('Nothing to export: this view has no tables')
     const name = [pane.fn, pane.security, new Date().toISOString().slice(0, 10)]

@@ -1,6 +1,7 @@
 # Render Blueprint: New → Blueprint → pick this repository.
 # The two keys are optional: SEC_USER_AGENT enables FIL (SEC filings), ANTHROPIC_API_KEY enables
-# ASK. Render asks for their values when the Blueprint is created.
+# ASK. Render asks for their values when the Blueprint is created. TESSERA_PUBLIC_DEMO keeps a
+# public instance within the data providers' terms (see backend/src/tessera/deployment.py).
 services:
   - type: web
     name: tessera-terminal
@@ -10,6 +11,8 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
+      - key: TESSERA_PUBLIC_DEMO
+        value: "1"
       - key: SEC_USER_AGENT
         sync: false
       - key: ANTHROPIC_API_KEY

@@ -18,9 +18,9 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from tessera import http
+from tessera import deployment, http
 from tessera.cache import cached
-from tessera.errors import NotFoundError
+from tessera.errors import NotApplicableError, NotFoundError
 from tessera.models import Envelope, Provenance
 from tessera.providers import ecb
 
@@ -133,6 +133,24 @@ def apply_transform(
 
 FRED_ID = re.compile(r"^[A-Z0-9_]{2,40}$")
 
+# FRED republishes these families under licence from their owners, who do not allow further
+# redistribution. The catalogue above is all public-domain (BLS, BEA, Fed, Treasury, Eurostat).
+THIRD_PARTY: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"^(SP500|DJ[ICTU]A|CSUSHPI\w*|SPCS\w+)$"), "S&P Dow Jones Indices"),
+    (re.compile(r"^NASDAQ\w*$"), "Nasdaq"),
+    (re.compile(r"^BAML\w+$"), "ICE Data Indices (ICE BofA)"),
+    (re.compile(r"^\w+(TD|ON)156N$"), "ICE Benchmark Administration (LIBOR)"),
+    (re.compile(r"^[DW]?(AAA|BAA)(10YM?|FFM?)?$"), "Moody's"),
+    (re.compile(r"^WILL\w+$"), "Wilshire"),
+    (re.compile(r"^(VIX|VX[A-Z]*|OVX|GVZ|EVZ|RVX)CLS$"), "Cboe"),
+    (re.compile(r"^(UMCSENT|MICH)$"), "University of Michigan"),
+    (re.compile(r"^CB[A-Z]{3,6}USD$"), "Coinbase"),
+]  # fmt: skip
+
+
+def third_party_owner(key: str) -> str | None:
+    return next((owner for pattern, owner in THIRD_PARTY if pattern.match(key)), None)
+
 
 def _spec_for(series_id: str) -> SeriesSpec:
     if series_id in BY_ID:
@@ -141,6 +159,11 @@ def _spec_for(series_id: str) -> SeriesSpec:
     key = series_id.removeprefix("FRED:").upper()
     if not FRED_ID.match(key):
         raise NotFoundError(f"Unknown series '{series_id}'")
+    if deployment.public_demo() and (owner := third_party_owner(key)):
+        raise NotApplicableError(
+            f"FRED republishes {key} under licence from {owner}, which does not allow "
+            "redistribution, so this public demo does not show it. Run Tessera locally to view it."
+        )
     return SeriesSpec(series_id, key, "US", "fred", key, "daily", "as published", "level")
 
 

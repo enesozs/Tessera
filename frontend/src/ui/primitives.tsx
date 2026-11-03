@@ -182,7 +182,10 @@ export function ProvenanceBar({ meta, extra }: { meta?: Provenance; extra?: Reac
       : fmtDate(meta.as_of)
     : null
   return (
-    <div className="flex h-[22px] shrink-0 items-center gap-2 overflow-hidden border-t border-line px-2 text-[10.5px] text-fg-3">
+    <div
+      data-source={meta.source}
+      className="flex h-[22px] shrink-0 items-center gap-2 overflow-hidden border-t border-line px-2 text-[10.5px] text-fg-3"
+    >
       {meta.stale && (
         <span
           className="rounded-[2px] bg-amber/15 px-1 font-semibold text-amber"

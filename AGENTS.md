@@ -72,6 +72,15 @@ DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
   `vercel.json` deploys to Vercel as services `web` + `api` (derivlab via the install command);
   the cache falls back to memory when its directory cannot be created (read-only file system).
   The image was built and run locally at Render's 512 MB limit (about 140 MB with live data).
+  **Public demo mode** (`TESSERA_PUBLIC_DEMO=1`, `tessera/deployment.py`, set in `render.yaml`;
+  on Vercel it must be added as a project environment variable): the API answers same-origin
+  browser requests only (`from_the_app` in `main.py`: `Sec-Fetch-Site`, else Origin/Referer vs
+  Host → 403 `AppOnly`), `/docs` and `/openapi.json` are off, CSV export refuses panes whose
+  provenance source starts with "Yahoo" (`data-source` on `ProvenanceBar`; Tessera's own models
+  such as DCF and PORT still export), and `ECO` declines licensed FRED families
+  (`macro.THIRD_PARTY`) with 422. `/api/health` reports `public_demo` to the UI. Reason: Yahoo's
+  terms cover personal use and FRED's third-party series forbid redistribution; local runs keep
+  everything.
 - Phase 7 added: `ASK` (`tessera/assistant.py`): a manual Claude tool-use loop (Anthropic
   Python SDK 1.x, `client.beta.messages.create`, model `TESSERA_ASK_MODEL` default
   claude-opus-5-5, effort medium, adaptive thinking by default, server-side refusal fallback
@@ -90,9 +99,9 @@ DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
   market-hours clocks, API status. State persists to localStorage (`tessera.workspace`).
 - Backend: FastAPI + providers for Yahoo, U.S. Treasury, ECB, FRED, Frankfurter, SEC EDGAR;
   read-through cache with on-disk stale fallback.
-- Tests: 105 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
-  cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn, the query parser), 14
-  frontend (vitest, command
+- Tests: 126 backend (pytest, offline — a hand-computed DCF, a synthetic Heston chain through
+  cleaning → SVI, bonds vs QuantLib, Ledoit–Wolf vs scikit-learn, the query parser, public
+  demo mode), 15 frontend (vitest, command
   grammar), Playwright smoke test across every workspace and function, including a DCF edit
   round-trip (`make e2e`).
 
@@ -101,7 +110,7 @@ DCF COMP OMON IVOL PORT EQS ALRT WEI CMDTY MOST WL FX YC SOV BOND ECO ASK HELP`.
 ## 3. Running
 
 `make install`, then `make dev` → UI http://localhost:5180, API http://localhost:8010
-(docs at `/docs`). Ports are deliberately not 8000/5173: project 05 uses those.
+(docs at `/docs`, except in public demo mode). Ports are deliberately not 8000/5173: project 05 uses those.
 `SEC_USER_AGENT` in `.env` enables `FIL`; without it FIL shows a configuration message.
 
 ---

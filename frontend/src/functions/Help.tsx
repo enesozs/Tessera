@@ -22,7 +22,7 @@ const SOURCES: [string, string, string][] = [
   [
     'Yahoo Finance',
     'Equities, indices, futures, statements, news',
-    'Delayed / end of day; unofficial API for personal & educational use',
+    'Delayed / end of day; unofficial API for personal & educational use, not redistributed',
   ],
   ['U.S. Treasury', 'Daily par yield curve', 'Official, end of day'],
   [
@@ -118,8 +118,9 @@ export function Help() {
           </table>
           <p className="leading-relaxed text-fg-3">
             Every pane footer states its source, freshness and as-of time. Nothing here is real-time
-            or investment advice. Tessera is an independent project, not affiliated with Bloomberg
-            L.P. or any data provider. Charts by TradingView Lightweight Charts™ and Apache ECharts.
+            or investment advice. Data belongs to its providers and is shown for personal and
+            educational use. Tessera is an independent project, not affiliated with Bloomberg L.P.
+            or any data provider. Charts by TradingView Lightweight Charts™ and Apache ECharts.
           </p>
         </div>
       </div>

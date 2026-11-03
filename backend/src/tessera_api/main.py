@@ -12,6 +12,7 @@ import threading
 import time
 from pathlib import Path
 from typing import Annotated, Literal
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Query, Request
 from fastapi.middleware.gzip import GZipMiddleware
@@ -23,6 +24,7 @@ from tessera import (
     assistant,
     curves,
     dcf,
+    deployment,
     fixed_income,
     markets,
     option_models,
@@ -42,10 +44,17 @@ from tessera.providers import fx, macro, rates, research, sec, yahoo
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
+# A public demo keeps every function but serves its API to the app only (see
+# tessera/deployment.py), so the interactive docs are left out there.
+PUBLIC_DEMO = deployment.public_demo()
+
 app = FastAPI(
     title="Tessera API",
     version="0.1.0",
     description="Free public market data, normalised and annotated with provenance.",
+    docs_url=None if PUBLIC_DEMO else "/docs",
+    redoc_url=None if PUBLIC_DEMO else "/redoc",
+    openapi_url=None if PUBLIC_DEMO else "/openapi.json",
 )
 
 # Ten years of daily bars is ~250 kB of JSON; compression cuts that by ~80%.
@@ -79,9 +88,32 @@ class RateLimiter:
 app.state.limiter = RateLimiter(int(os.environ.get("TESSERA_RATE_LIMIT", "300")))
 
 
+def from_the_app(request: Request) -> bool:
+    """Whether a request comes from Tessera's own pages, as the browser declares it.
+
+    Browsers mark every fetch with Sec-Fetch-Site; older ones still send the page as Origin or
+    Referer. Scripts can forge both, so this stops casual use as a data proxy, nothing more.
+    """
+    site = request.headers.get("sec-fetch-site")
+    if site is not None:
+        return site == "same-origin"
+    page = urlsplit(request.headers.get("origin") or request.headers.get("referer") or "").netloc
+    hosts = {request.headers.get("host"), request.headers.get("x-forwarded-host")}
+    return bool(page) and page in hosts
+
+
 @app.middleware("http")
 async def guard(request: Request, call_next):
     if request.url.path.startswith("/api/") and request.url.path != "/api/health":
+        if deployment.public_demo() and not from_the_app(request):
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "detail": "This public demo's API serves the Tessera app only. "
+                    "Run Tessera locally for direct API access and the interactive docs.",
+                    "kind": "AppOnly",
+                },
+            )
         client = request.client.host if request.client else "unknown"
         if not request.app.state.limiter.allow(client):
             return JSONResponse(
@@ -117,8 +149,8 @@ def handle_tessera_error(_: Request, exc: TesseraError) -> JSONResponse:
 
 
 @app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict[str, str | bool]:
+    return {"status": "ok", "public_demo": deployment.public_demo()}
 
 
 # ── Securities ────────────────────────────────────────────────────────────────

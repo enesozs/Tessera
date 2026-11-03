@@ -34,6 +34,45 @@ def test_every_catalogue_entry_has_a_unique_id():
     assert len(ids) == len(set(ids))
 
 
+@pytest.mark.parametrize(
+    ("key", "owner"),
+    [
+        ("SP500", "S&P"),
+        ("DJIA", "S&P"),
+        ("NASDAQCOM", "Nasdaq"),
+        ("BAMLH0A0HYM2", "ICE"),
+        ("USD3MTD156N", "LIBOR"),
+        ("DAAA", "Moody"),
+        ("BAA10Y", "Moody"),
+        ("WILL5000IND", "Wilshire"),
+        ("VIXCLS", "Cboe"),
+        ("UMCSENT", "Michigan"),
+        ("CBBTCUSD", "Coinbase"),
+    ],
+)
+def test_third_party_fred_series_are_recognised(key, owner):
+    assert owner in (macro.third_party_owner(key) or "")
+
+
+@pytest.mark.parametrize("key", ["UNRATE", "DGS10", "GDPC1", "CPIAUCSL", "T10Y2Y", "BAA_X1"])
+def test_public_domain_fred_series_are_not_flagged(key):
+    assert macro.third_party_owner(key) is None
+
+
+def test_every_catalogue_series_is_public_domain():
+    assert all(macro.third_party_owner(s.key) is None for s in macro.CATALOG)
+
+
+def test_public_demo_declines_third_party_series(monkeypatch):
+    from tessera.errors import NotApplicableError
+
+    assert macro._spec_for("SP500").key == "SP500"  # locally: shown as published
+    monkeypatch.setenv("TESSERA_PUBLIC_DEMO", "1")
+    with pytest.raises(NotApplicableError, match="S&P Dow Jones"):
+        macro._spec_for("SP500")
+    assert macro._spec_for("GDPC1").key == "GDPC1"
+
+
 def test_cross_rates_are_triangular_and_invert():
     eur = {"USD": 1.12, "JPY": 177.0, "GBP": 0.84}
     ccys = ["EUR", "USD", "JPY", "GBP"]

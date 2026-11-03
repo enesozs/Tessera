@@ -31,7 +31,9 @@ export function StatusBar() {
         {ok ? 'API connected' : health.isPending ? 'Connecting…' : 'API offline'}
       </span>
       <span className="text-fg-4">|</span>
-      <span>Delayed & end-of-day data from public sources · not for trading</span>
+      <span>
+        Delayed & end-of-day data from public sources · personal & educational use · not for trading
+      </span>
       <span className="flex-1" />
       <span className="hidden sm:inline">
         {ws.name} · {ws.panes.length} pane{ws.panes.length === 1 ? '' : 's'}

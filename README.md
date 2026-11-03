@@ -10,7 +10,7 @@ it is.
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.143-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-120%20passing-0A9EDC?logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-141%20passing-0A9EDC?logo=pytest&logoColor=white)
 ![Validated](https://img.shields.io/badge/bonds%20validated%20against-QuantLib-2EA44F)
 [![License](https://img.shields.io/badge/license-MIT-2EA44F)](LICENSE)
 
@@ -422,6 +422,7 @@ from the other QuantProjects (8000/5173) so they can run side by side
 | `SEC_USER_AGENT` | Contact string SEC EDGAR requires, e.g. `"Your Name you@example.com"` — enables `FIL` |
 | `ANTHROPIC_API_KEY` | Enables `ASK`; `TESSERA_ASK_MODEL` overrides the model (default `claude-opus-5-5`) |
 | `TESSERA_RATE_LIMIT` | API requests per minute per client (default 300; 0 disables) |
+| `TESSERA_PUBLIC_DEMO` | `1` for a public instance: keeps within the data providers' terms (see [Deployment](#deployment)) |
 | `TESSERA_CACHE_DIR` · `TESSERA_STATIC_DIR` | Where provider responses are cached · where the built UI is served from |
 
 | Command | What it does |
@@ -471,6 +472,19 @@ make docker-run   # http://localhost:8010, provider cache kept in the `tessera-d
   and the FastAPI app (`api`, a Python function with derivlab installed from GitHub), with
   `/api/*` routed to the API. Set the same two keys as project environment variables. The
   provider cache is in memory there, since the function's file system is read-only.
+- **Public demo mode** (`TESSERA_PUBLIC_DEMO=1`, set in `render.yaml`; add it as an environment
+  variable on Vercel). Yahoo Finance's terms cover personal use, and FRED republishes some series
+  under licence from their owners, so a public instance shows every function but does not
+  redistribute that data:
+  - the API answers Tessera's own pages only (browsers mark same-origin requests with
+    `Sec-Fetch-Site`), and the interactive docs are left out;
+  - CSV export works for every pane except raw Yahoo Finance data;
+  - `ECO` shows any public-domain FRED series and declines licensed ones (S&P/Dow Jones,
+    Nasdaq, ICE BofA, ICE LIBOR, Moody's, Wilshire, Cboe, University of Michigan, Coinbase),
+    with the owner named.
+
+  A local or self-hosted instance keeps everything, which is the personal use these terms
+  allow.
 - The API compresses responses (ten years of daily prices: 433 kB → 84 kB), sets basic security
   headers and rate-limits each client, so a public instance stays within the free providers'
   limits.
@@ -481,7 +495,8 @@ make docker-run   # http://localhost:8010, provider cache kept in the `tessera-d
 ## Data and modelling notes
 
 - **Free, labelled data.** Quotes are delayed or end-of-day from free sources and are labelled as
-  such on every pane; Yahoo Finance data is for personal and educational use. `BOND` prices any
+  such on every pane; Yahoo Finance data is for personal and educational use and is not
+  redistributed (see public demo mode under [Deployment](#deployment)). `BOND` prices any
   bond from the price or yield you enter.
 - **Statements** are Yahoo's standardised figures, including restatements.
 - **Reference series:** euro-area sovereign yields are monthly averages, and FX rates are the
