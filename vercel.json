@@ -4,17 +4,31 @@
     "api": {
       "root": "backend",
       "framework": "fastapi",
-      "entrypoint": "src.tessera_api.main:app",
-      "installCommand": "uv pip install . 'derivlab @ https://github.com/enesozs/Derivatives-Pricing-Lab/archive/refs/heads/main.tar.gz#subdirectory=backend'"
+      "entrypoint": "vercel_app:app"
     },
     "web": {
       "root": "frontend",
       "framework": "vite",
-      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "api" } },
-    { "source": "/(.*)", "destination": { "service": "web" } }
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "web"
+      }
+    }
   ]
 }

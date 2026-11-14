@@ -13,8 +13,9 @@ dependencies = [
     "httpx>=0.28",
     "pandas>=2.2",
     "yfinance>=1.7",
-    # Also requires `derivlab` (QuantProjects/05-derivatives-pricing-lab/backend), installed
-    # editable by `make install`; a relative path cannot be declared portably here.
+    # Also requires `derivlab` (QuantProjects/05-derivatives-pricing-lab/backend). Locally `make install`
+    # installs it editable from the sibling project; on Linux hosts (Vercel, Docker) it comes from GitHub.
+    "derivlab @ https://github.com/enesozs/Derivatives-Pricing-Lab/archive/refs/heads/main.tar.gz#subdirectory=backend ; sys_platform == 'linux'",
 ]
 
 [project.optional-dependencies]
@@ -22,6 +23,9 @@ dev = ["pytest>=8", "httpx2>=2.13", "QuantLib>=1.36", "scikit-learn>=1.5", "ruff
 
 [tool.fastapi]
 entrypoint = "tessera_api.main:app"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tessera", "src/tessera_api"]

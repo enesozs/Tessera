@@ -22,3 +22,5 @@ frontend/dist/
 !.vscode/settings.json
 .idea/
 e2e/screenshots/
+.vercel
+.env*
