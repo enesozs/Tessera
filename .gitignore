@@ -24,3 +24,9 @@ frontend/dist/
 e2e/screenshots/
 .vercel
 .env*
+
+# Agent instructions and internal working notes (kept local)
+AGENTS.md
+CLAUDE.md
+CLAUDE.local.md
+.claude/

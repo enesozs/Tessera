@@ -381,7 +381,6 @@ frontend/   React + TypeScript ──── fetch /api/* ────▶  backen
 ├── e2e/                     # Playwright smoke test, README screenshots
 ├── docs/screenshots/
 ├── Dockerfile  .github/workflows/ci.yml
-├── AGENTS.md                # detailed architecture, conventions and roadmap
 └── Makefile
 ```
 
@@ -529,8 +528,8 @@ commit:
 | 6 · Platform | Optional derivlab, Docker image, CI, compression, rate limiting |
 | 7 · AI | ASK: a cited research assistant over the terminal's own data |
 
-Next steps are listed in `AGENTS.md`: point-in-time storage of history, saved
-screens, and an evaluation set for `ASK`.
+Possible next steps: point-in-time storage of history, saved screens, and an evaluation set
+for `ASK`.
 
 ---
 
